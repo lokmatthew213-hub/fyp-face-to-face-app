@@ -1,8 +1,9 @@
 /* ============================================================
-   百分戰局 Percent Battle — Design System
-   Style: Playful Classroom Chalkboard (活潑教室黑板)
-   Philosophy: Dark chalkboard green base, chalk-white text,
-   colorful counting blocks, rounded friendly UI for primary students
+   百分戰局 Percent Battle — Design System v2
+   Style: Vibrant Candy Pop (活潑糖果風)
+   Philosophy: Bright, cheerful, high-contrast colors that
+   primary school students love. Sky-blue base with vivid
+   coral/mint/lemon/violet accents. Light and energetic!
    ============================================================ */
 
 @import "tailwindcss";
@@ -42,50 +43,60 @@
 }
 
 :root {
-  /* Chalkboard color palette */
-  --chalk-green-dark: oklch(0.25 0.08 145);
-  --chalk-green-mid: oklch(0.32 0.09 145);
-  --chalk-green-light: oklch(0.40 0.09 145);
-  --chalk-white: oklch(0.96 0.005 90);
-  --chalk-cream: oklch(0.92 0.015 90);
-  --chalk-yellow: oklch(0.88 0.16 95);
-  --chalk-red: oklch(0.62 0.22 25);
-  --chalk-blue: oklch(0.58 0.18 240);
-  --chalk-gold: oklch(0.82 0.15 85);
+  /* ── Candy Pop Palette ── */
+  /* Sky blue base */
+  --sky-light:   oklch(0.94 0.06 220);   /* very light sky */
+  --sky-mid:     oklch(0.88 0.09 220);   /* soft sky blue */
+  --sky-deep:    oklch(0.75 0.14 230);   /* deeper sky */
 
-  /* Player colors */
-  --player-1: oklch(0.62 0.22 25);    /* Red */
-  --player-2: oklch(0.58 0.18 240);   /* Blue */
-  --player-3: oklch(0.82 0.15 85);    /* Yellow/Gold */
-  --player-4: oklch(0.60 0.18 145);   /* Green */
+  /* Vibrant accents */
+  --candy-coral:  oklch(0.72 0.22 28);   /* warm coral-red */
+  --candy-lemon:  oklch(0.90 0.18 95);   /* bright lemon yellow */
+  --candy-mint:   oklch(0.80 0.16 165);  /* fresh mint green */
+  --candy-violet: oklch(0.72 0.20 290);  /* cheerful violet */
+  --candy-orange: oklch(0.78 0.20 55);   /* vivid orange */
+  --candy-pink:   oklch(0.80 0.18 350);  /* bubblegum pink */
 
-  --radius: 0.75rem;
+  /* Neutral text */
+  --ink-dark:   oklch(0.22 0.04 250);   /* near-black with blue tint */
+  --ink-mid:    oklch(0.40 0.04 250);   /* medium dark */
+  --ink-light:  oklch(0.60 0.04 250);   /* muted text */
+  --white-pure: oklch(1.00 0.00 0);
 
-  --background: var(--chalk-green-dark);
-  --foreground: var(--chalk-white);
-  --card: var(--chalk-green-mid);
-  --card-foreground: var(--chalk-white);
-  --popover: var(--chalk-green-mid);
-  --popover-foreground: var(--chalk-white);
-  --primary: var(--chalk-yellow);
-  --primary-foreground: oklch(0.2 0.05 90);
-  --secondary: var(--chalk-green-light);
-  --secondary-foreground: var(--chalk-white);
-  --muted: var(--chalk-green-light);
-  --muted-foreground: oklch(0.75 0.02 145);
-  --accent: var(--chalk-gold);
-  --accent-foreground: oklch(0.2 0.05 90);
-  --destructive: var(--chalk-red);
-  --destructive-foreground: var(--chalk-white);
-  --border: oklch(0.45 0.06 145);
-  --input: oklch(0.35 0.07 145);
-  --ring: var(--chalk-yellow);
+  /* Player colors — vivid, distinct, fun */
+  --player-1: oklch(0.72 0.22 28);    /* Coral Red */
+  --player-2: oklch(0.62 0.22 250);   /* Royal Blue */
+  --player-3: oklch(0.78 0.20 55);    /* Vivid Orange */
+  --player-4: oklch(0.72 0.20 145);   /* Bright Green */
 
-  --chart-1: var(--chalk-red);
-  --chart-2: var(--chalk-yellow);
-  --chart-3: var(--chalk-blue);
-  --chart-4: oklch(0.60 0.18 145);
-  --chart-5: var(--chalk-gold);
+  --radius: 0.875rem;
+
+  /* Semantic tokens — light theme */
+  --background: var(--sky-light);
+  --foreground: var(--ink-dark);
+  --card: var(--white-pure);
+  --card-foreground: var(--ink-dark);
+  --popover: var(--white-pure);
+  --popover-foreground: var(--ink-dark);
+  --primary: var(--candy-coral);
+  --primary-foreground: var(--white-pure);
+  --secondary: var(--sky-mid);
+  --secondary-foreground: var(--ink-dark);
+  --muted: oklch(0.91 0.04 220);
+  --muted-foreground: var(--ink-light);
+  --accent: var(--candy-lemon);
+  --accent-foreground: var(--ink-dark);
+  --destructive: oklch(0.65 0.25 25);
+  --destructive-foreground: var(--white-pure);
+  --border: oklch(0.82 0.07 220);
+  --input: oklch(0.88 0.06 220);
+  --ring: var(--candy-violet);
+
+  --chart-1: var(--candy-coral);
+  --chart-2: var(--candy-lemon);
+  --chart-3: var(--sky-deep);
+  --chart-4: var(--candy-mint);
+  --chart-5: var(--candy-orange);
 }
 
 @layer base {
@@ -95,9 +106,14 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Nunito', 'Noto Sans TC', sans-serif;
-    background-image:
-      radial-gradient(ellipse at 20% 50%, oklch(0.30 0.09 145 / 0.4) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 20%, oklch(0.28 0.08 145 / 0.3) 0%, transparent 50%);
+    /* Vibrant gradient background — sky blue to soft lavender */
+    background: linear-gradient(
+      135deg,
+      oklch(0.96 0.06 220) 0%,
+      oklch(0.94 0.07 240) 30%,
+      oklch(0.95 0.05 260) 60%,
+      oklch(0.96 0.06 200) 100%
+    );
     min-height: 100vh;
   }
   button:not(:disabled),
@@ -142,33 +158,39 @@
     }
   }
 
-  /* Chalk texture card */
+  /* ── Candy Card — white card with soft shadow ── */
   .chalk-card {
-    background: var(--chalk-green-mid);
-    border: 2px solid oklch(0.55 0.07 145 / 0.6);
-    border-radius: 1rem;
+    background: oklch(1.00 0.00 0 / 0.92);
+    border: 2px solid oklch(0.85 0.07 220);
+    border-radius: 1.25rem;
     box-shadow:
-      0 4px 16px oklch(0.1 0.05 145 / 0.5),
-      inset 0 1px 0 oklch(0.55 0.07 145 / 0.3);
+      0 4px 20px oklch(0.60 0.12 230 / 0.18),
+      0 1px 4px oklch(0.60 0.12 230 / 0.10),
+      inset 0 1px 0 oklch(1 0 0 / 0.8);
     position: relative;
     overflow: hidden;
   }
 
+  /* Subtle top gradient stripe for depth */
   .chalk-card::before {
     content: '';
     position: absolute;
-    inset: 0;
-    background-image:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    border-radius: inherit;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg,
+      var(--candy-coral),
+      var(--candy-lemon),
+      var(--candy-mint),
+      var(--candy-violet)
+    );
+    border-radius: 1.25rem 1.25rem 0 0;
   }
 
-  /* Chalk button style */
+  /* ── Candy Button ── */
   .chalk-btn {
     font-family: 'Nunito', 'Noto Sans TC', sans-serif;
-    font-weight: 700;
-    border-radius: 0.75rem;
+    font-weight: 800;
+    border-radius: 0.875rem;
     padding: 0.75rem 1.5rem;
     transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
@@ -179,65 +201,73 @@
     transform: scale(0.96) translateY(1px);
   }
 
-  /* Color block for context card */
+  /* ── Color blocks for context card ── */
   .color-block {
-    width: 1.75rem;
-    height: 1.75rem;
-    border-radius: 0.25rem;
-    border: 1.5px solid oklch(0 0 0 / 0.25);
-    box-shadow: 0 1px 3px oklch(0 0 0 / 0.3), inset 0 1px 0 oklch(1 1 1 / 0.2);
+    border-radius: 0.3rem;
+    border: 1.5px solid oklch(0 0 0 / 0.15);
+    box-shadow: 0 1px 3px oklch(0 0 0 / 0.15), inset 0 1px 0 oklch(1 1 1 / 0.4);
     transition: transform 0.1s ease;
     flex-shrink: 0;
   }
 
-  .color-block-red { background: oklch(0.62 0.22 25); }
-  .color-block-yellow { background: oklch(0.88 0.16 95); }
-  .color-block-blue { background: oklch(0.58 0.18 240); }
+  /* Vivid block colors */
+  .color-block-red    { background: linear-gradient(135deg, oklch(0.72 0.22 28), oklch(0.65 0.24 20)); }
+  .color-block-yellow { background: linear-gradient(135deg, oklch(0.90 0.18 95), oklch(0.84 0.20 85)); }
+  .color-block-blue   { background: linear-gradient(135deg, oklch(0.62 0.22 250), oklch(0.55 0.24 240)); }
 
-  /* Player zone styles */
+  /* ── Player zone styles ── */
   .player-zone {
     border-radius: 1rem;
-    padding: 0.75rem;
-    border: 2px solid transparent;
+    padding: 0.5rem;
+    border: 2.5px solid transparent;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  /* Player 1 — Coral Red */
   .player-zone-1 {
-    border-color: oklch(0.62 0.22 25 / 0.5);
-    background: oklch(0.62 0.22 25 / 0.12);
+    border-color: oklch(0.72 0.22 28 / 0.6);
+    background: linear-gradient(135deg,
+      oklch(0.72 0.22 28 / 0.12),
+      oklch(0.72 0.22 28 / 0.06)
+    );
   }
+  /* Player 2 — Royal Blue */
   .player-zone-2 {
-    border-color: oklch(0.58 0.18 240 / 0.5);
-    background: oklch(0.58 0.18 240 / 0.12);
+    border-color: oklch(0.62 0.22 250 / 0.6);
+    background: linear-gradient(135deg,
+      oklch(0.62 0.22 250 / 0.12),
+      oklch(0.62 0.22 250 / 0.06)
+    );
   }
+  /* Player 3 — Vivid Orange */
   .player-zone-3 {
-    border-color: oklch(0.82 0.15 85 / 0.5);
-    background: oklch(0.82 0.15 85 / 0.12);
+    border-color: oklch(0.78 0.20 55 / 0.6);
+    background: linear-gradient(135deg,
+      oklch(0.78 0.20 55 / 0.12),
+      oklch(0.78 0.20 55 / 0.06)
+    );
   }
+  /* Player 4 — Bright Green */
   .player-zone-4 {
-    border-color: oklch(0.60 0.18 145 / 0.5);
-    background: oklch(0.60 0.18 145 / 0.12);
+    border-color: oklch(0.72 0.20 145 / 0.6);
+    background: linear-gradient(135deg,
+      oklch(0.72 0.20 145 / 0.12),
+      oklch(0.72 0.20 145 / 0.06)
+    );
   }
 
   .player-zone.active {
     box-shadow: 0 0 20px currentColor;
   }
 
-  /* Rotated player zones for multi-side layout */
-  .player-zone-top { transform-origin: center; }
-  .player-zone-bottom { transform-origin: center; }
-  .player-zone-left { transform-origin: center; }
-  .player-zone-right { transform-origin: center; }
-
-  /* Chalk text styles */
+  /* ── Title style ── */
   .chalk-title {
     font-family: 'Nunito', 'Noto Sans TC', sans-serif;
     font-weight: 900;
     letter-spacing: -0.02em;
-    text-shadow: 2px 2px 0 oklch(0.15 0.05 145), 0 0 20px oklch(0.88 0.16 95 / 0.3);
   }
 
-  /* Animated entrance */
+  /* ── Animations ── */
   @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
@@ -269,16 +299,21 @@
     100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
   }
 
-  @keyframes chalk-write {
-    from { clip-path: inset(0 100% 0 0); }
-    to { clip-path: inset(0 0% 0 0); }
-  }
-
   @keyframes bounce-in {
     0% { transform: scale(0.3); opacity: 0; }
     50% { transform: scale(1.1); }
     70% { transform: scale(0.95); }
     100% { transform: scale(1); opacity: 1; }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-6px); }
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
   }
 
   .animate-fade-in-up {
@@ -301,54 +336,97 @@
     animation: bounce-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 
-  /* Stagger delays for block animations */
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  /* Stagger delays */
   .stagger-1 { animation-delay: 0.05s; }
   .stagger-2 { animation-delay: 0.1s; }
   .stagger-3 { animation-delay: 0.15s; }
   .stagger-4 { animation-delay: 0.2s; }
   .stagger-5 { animation-delay: 0.25s; }
 
-  /* Win modal overlay */
+  /* ── Win modal overlay ── */
   .win-overlay {
-    background: oklch(0.1 0.05 145 / 0.85);
-    backdrop-filter: blur(8px);
+    background: oklch(0.20 0.08 250 / 0.70);
+    backdrop-filter: blur(10px);
   }
 
-  /* Photo upload area */
+  /* ── Photo upload area ── */
   .photo-upload-zone {
-    border: 2px dashed oklch(0.55 0.07 145);
+    border: 2.5px dashed oklch(0.70 0.12 220);
     border-radius: 1rem;
-    background: oklch(0.28 0.07 145 / 0.5);
+    background: oklch(0.95 0.04 220 / 0.6);
     transition: all 0.2s ease;
   }
 
   .photo-upload-zone:hover {
-    border-color: var(--chalk-yellow);
-    background: oklch(0.30 0.08 145 / 0.7);
+    border-color: var(--candy-coral);
+    background: oklch(0.96 0.05 220 / 0.8);
   }
 
-  /* AI result display */
+  /* ── AI result display ── */
   .ai-result-pass {
-    background: oklch(0.35 0.12 145 / 0.8);
-    border: 2px solid oklch(0.65 0.18 145);
-    color: oklch(0.85 0.15 145);
+    background: oklch(0.92 0.10 145 / 0.8);
+    border: 2px solid oklch(0.72 0.20 145);
+    color: oklch(0.30 0.12 145);
   }
 
   .ai-result-fail {
-    background: oklch(0.30 0.12 25 / 0.8);
-    border: 2px solid oklch(0.62 0.22 25);
-    color: oklch(0.85 0.15 25);
+    background: oklch(0.95 0.08 25 / 0.8);
+    border: 2px solid oklch(0.72 0.22 28);
+    color: oklch(0.35 0.15 25);
   }
 
-  /* Scrollbar styling */
-  ::-webkit-scrollbar {
-    width: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: var(--chalk-green-dark);
-  }
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--sky-light); }
   ::-webkit-scrollbar-thumb {
-    background: oklch(0.45 0.07 145);
+    background: oklch(0.75 0.10 220);
     border-radius: 3px;
+  }
+
+  /* ── Game board specific ── */
+  .game-board-bg {
+    background: linear-gradient(
+      160deg,
+      oklch(0.96 0.06 220) 0%,
+      oklch(0.93 0.08 240) 40%,
+      oklch(0.95 0.06 260) 70%,
+      oklch(0.96 0.05 200) 100%
+    );
+  }
+
+  /* Top bar on game board */
+  .game-top-bar {
+    background: oklch(1.00 0.00 0 / 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 2px solid oklch(0.85 0.07 220);
+    box-shadow: 0 2px 12px oklch(0.60 0.12 230 / 0.12);
+  }
+
+  /* Score bar */
+  .score-bar {
+    background: oklch(1.00 0.00 0 / 0.88);
+    backdrop-filter: blur(12px);
+    border-top: 2px solid oklch(0.85 0.07 220);
+    box-shadow: 0 -2px 12px oklch(0.60 0.12 230 / 0.10);
+  }
+
+  /* Context card area */
+  .context-area {
+    background: oklch(1.00 0.00 0 / 0.50);
+    border: 2px solid oklch(0.85 0.07 220);
+    border-radius: 1.25rem;
+    box-shadow: 0 2px 16px oklch(0.60 0.12 230 / 0.12);
+  }
+
+  /* Player side panels */
+  .player-side-panel {
+    background: oklch(1.00 0.00 0 / 0.75);
+    backdrop-filter: blur(8px);
+    border: 2px solid oklch(0.85 0.07 220);
+    box-shadow: 0 2px 12px oklch(0.60 0.12 230 / 0.10);
   }
 }

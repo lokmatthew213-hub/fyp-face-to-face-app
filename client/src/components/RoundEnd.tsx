@@ -1,5 +1,5 @@
 // ============================================================
-// 百分戰局 — Round End Summary Screen
+// 百分戰局 — Round End Summary Screen (Candy Pop Design)
 // Shows score changes for the round, then starts next round
 // ============================================================
 
@@ -12,7 +12,6 @@ export default function RoundEnd() {
 
   if (!summary) return null;
 
-  // Filter out zero-delta events for display
   const events = summary.events.filter((e) => e.delta !== 0);
   const zeroEvents = summary.events.filter((e) => e.delta === 0);
 
@@ -24,12 +23,15 @@ export default function RoundEnd() {
           <div className="text-center mb-5">
             <div className="text-4xl mb-2">🏁</div>
             <h2
-              className="text-yellow-400 font-black text-xl"
-              style={{ fontFamily: "'Noto Sans TC', sans-serif" }}
+              className="font-black text-xl"
+              style={{
+                fontFamily: "'Noto Sans TC', sans-serif",
+                color: 'oklch(0.55 0.20 55)',
+              }}
             >
               回合結束！
             </h2>
-            <p className="text-white/50 text-xs mt-1">第 {state.round} 回合</p>
+            <p className="text-slate-400 text-xs mt-1">第 {state.round} 回合</p>
           </div>
 
           {/* Score changes */}
@@ -43,19 +45,22 @@ export default function RoundEnd() {
                   key={i}
                   className="flex items-center gap-3 p-3 rounded-xl border"
                   style={{
-                    backgroundColor: `${cfg.color}15`,
-                    borderColor: `${cfg.color}40`,
+                    backgroundColor: `${cfg.color}12`,
+                    borderColor: `${cfg.color}35`,
                   }}
                 >
                   <span className="text-xl">{cfg.emoji}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white font-bold text-sm truncate">{player?.name ?? cfg.name}</p>
-                    <p className="text-white/50 text-xs truncate">{event.reason}</p>
+                    <p className="text-slate-800 font-bold text-sm truncate">{player?.name ?? cfg.name}</p>
+                    <p className="text-slate-400 text-xs truncate">{event.reason}</p>
                   </div>
                   <div className="flex-shrink-0 text-right">
                     <span
-                      className={`font-black text-lg ${isPositive ? 'text-green-400' : 'text-red-400'}`}
-                      style={{ fontFamily: "'Nunito', sans-serif" }}
+                      className="font-black text-lg"
+                      style={{
+                        color: isPositive ? 'oklch(0.55 0.22 145)' : 'oklch(0.55 0.22 25)',
+                        fontFamily: "'Nunito', sans-serif",
+                      }}
                     >
                       {isPositive ? '+' : ''}{event.delta}
                     </span>
@@ -64,21 +69,24 @@ export default function RoundEnd() {
               );
             })}
 
-            {/* Zero-delta events (e.g., proposer got 0) */}
+            {/* Zero-delta events */}
             {zeroEvents.map((event, i) => {
               const player = state.players.find((p) => p.id === event.playerId);
               const cfg = getPlayerConfig(event.playerId);
               return (
                 <div
                   key={`zero-${i}`}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/5"
+                  className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50"
                 >
                   <span className="text-xl">{cfg.emoji}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white/70 font-bold text-sm truncate">{player?.name ?? cfg.name}</p>
-                    <p className="text-white/40 text-xs truncate">{event.reason}</p>
+                    <p className="text-slate-500 font-bold text-sm truncate">{player?.name ?? cfg.name}</p>
+                    <p className="text-slate-400 text-xs truncate">{event.reason}</p>
                   </div>
-                  <span className="text-white/40 font-black text-lg" style={{ fontFamily: "'Nunito', sans-serif" }}>
+                  <span
+                    className="text-slate-400 font-black text-lg"
+                    style={{ fontFamily: "'Nunito', sans-serif" }}
+                  >
                     +0
                   </span>
                 </div>
@@ -87,9 +95,15 @@ export default function RoundEnd() {
           </div>
 
           {/* Total scores */}
-          <div className="bg-white/5 rounded-xl p-4 mb-5 border border-white/10">
+          <div
+            className="rounded-xl p-4 mb-5 border"
+            style={{
+              background: 'oklch(0.97 0.04 220)',
+              borderColor: 'oklch(0.85 0.08 220)',
+            }}
+          >
             <p
-              className="text-white/60 text-xs font-semibold text-center mb-3"
+              className="text-slate-500 text-xs font-semibold text-center mb-3"
               style={{ fontFamily: "'Noto Sans TC', sans-serif" }}
             >
               目前總分
@@ -101,14 +115,13 @@ export default function RoundEnd() {
                 return (
                   <div key={p.id} className="flex flex-col items-center gap-1 min-w-[60px]">
                     <span className="text-xl">{cfg.emoji}</span>
-                    <span className="text-white/70 text-xs font-semibold">{p.name}</span>
-                    {/* Progress bar */}
-                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                    <span className="text-slate-600 text-xs font-semibold">{p.name}</span>
+                    <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-500"
                         style={{
                           width: `${pct}%`,
-                          backgroundColor: cfg.color,
+                          background: `linear-gradient(90deg, ${cfg.color}, ${cfg.color}cc)`,
                         }}
                       />
                     </div>
@@ -118,7 +131,7 @@ export default function RoundEnd() {
                     >
                       {p.totalScore}
                     </span>
-                    <span className="text-white/30 text-xs">/ {WIN_SCORE}</span>
+                    <span className="text-slate-400 text-xs">/ {WIN_SCORE}</span>
                   </div>
                 );
               })}
@@ -128,8 +141,12 @@ export default function RoundEnd() {
           {/* Next round button */}
           <button
             onClick={confirmRoundEnd}
-            className="w-full chalk-btn py-3 bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-black text-sm shadow-lg shadow-yellow-500/30 transition-all"
-            style={{ fontFamily: "'Noto Sans TC', sans-serif" }}
+            className="w-full chalk-btn py-3 text-white font-black text-sm shadow-lg transition-all hover:scale-[1.02]"
+            style={{
+              fontFamily: "'Noto Sans TC', sans-serif",
+              background: 'linear-gradient(135deg, oklch(0.68 0.24 28), oklch(0.72 0.22 15))',
+              boxShadow: '0 4px 16px oklch(0.68 0.24 28 / 0.35)',
+            }}
           >
             🎴 下一回合！抽新情境牌
           </button>

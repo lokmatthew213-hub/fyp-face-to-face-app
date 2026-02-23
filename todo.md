@@ -59,3 +59,14 @@
 - [x] 4-player: all 4 players on bottom row, context card fills top area
 - [x] Enable direct camera capture (not just file upload) in photo step
 - [x] Camera button opens device camera directly on mobile/tablet
+
+## Phase 4: Four-Side Layout & Color Redesign
+- [x] Player icons on four sides (top/bottom/left/right) — no text rotation
+- [x] 2-player: top and bottom
+- [x] 3-player: top, bottom-left, bottom-right
+- [x] 4-player: top, bottom, left, right
+- [x] All player text/labels face same direction (no rotation)
+- [x] Vibrant cheerful color palette for primary students
+- [x] Bright gradient background (not dark chalkboard)
+- [x] Player colors updated to vivid fun palette
+- [x] UI components use light, playful colors

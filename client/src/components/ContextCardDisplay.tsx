@@ -1,6 +1,5 @@
 // ============================================================
-// 百分戰局 — Context Card Display (Landscape Layout)
-// Design: Playful Classroom Chalkboard
+// 百分戰局 — Context Card Display (Candy Pop Design, Landscape)
 // Shows colored blocks for students to COUNT themselves (no numbers shown)
 // Optimized for landscape / horizontal tablet display
 // ============================================================
@@ -46,10 +45,10 @@ function ColorBlockGrid({ card }: { card: ContextCard }) {
   // Block size — larger when fewer blocks, smaller when many
   let blockW: number;
   let blockH: number;
-  if (total <= 15) { blockW = 36; blockH = 36; }
-  else if (total <= 35) { blockW = 30; blockH = 30; }
-  else if (total <= 50) { blockW = 26; blockH = 26; }
-  else if (total <= 100) { blockW = 20; blockH = 20; }
+  if (total <= 15) { blockW = 38; blockH = 38; }
+  else if (total <= 35) { blockW = 32; blockH = 32; }
+  else if (total <= 50) { blockW = 28; blockH = 28; }
+  else if (total <= 100) { blockW = 22; blockH = 22; }
   else { blockW = 16; blockH = 16; }
 
   const colorMap = {
@@ -59,9 +58,9 @@ function ColorBlockGrid({ card }: { card: ContextCard }) {
   };
 
   const colorLabel = {
-    red: { text: '紅色', cls: 'text-red-400', dot: 'bg-red-500' },
-    yellow: { text: '黃色', cls: 'text-yellow-400', dot: 'bg-yellow-400' },
-    blue: { text: '藍色', cls: 'text-blue-400', dot: 'bg-blue-500' },
+    red: { text: '紅色', textColor: 'oklch(0.55 0.25 28)', dotColor: 'oklch(0.65 0.25 28)' },
+    yellow: { text: '黃色', textColor: 'oklch(0.55 0.22 75)', dotColor: 'oklch(0.78 0.22 75)' },
+    blue: { text: '藍色', textColor: 'oklch(0.50 0.22 240)', dotColor: 'oklch(0.62 0.22 240)' },
   };
 
   const presentColors = (['red', 'yellow', 'blue'] as const).filter(
@@ -74,8 +73,14 @@ function ColorBlockGrid({ card }: { card: ContextCard }) {
       <div className="flex gap-5 flex-wrap justify-center">
         {presentColors.map((color) => (
           <div key={color} className="flex items-center gap-1.5">
-            <div className={`w-4 h-4 rounded-sm ${colorLabel[color].dot}`} />
-            <span className={`text-sm font-bold ${colorLabel[color].cls}`} style={{ fontFamily: "'Noto Sans TC', sans-serif" }}>
+            <div
+              className="w-4 h-4 rounded-sm shadow-sm"
+              style={{ backgroundColor: colorLabel[color].dotColor, border: '1.5px solid rgba(0,0,0,0.12)' }}
+            />
+            <span
+              className="text-sm font-bold"
+              style={{ color: colorLabel[color].textColor, fontFamily: "'Noto Sans TC', sans-serif" }}
+            >
               {colorLabel[color].text}
             </span>
           </div>
@@ -90,19 +95,22 @@ function ColorBlockGrid({ card }: { card: ContextCard }) {
         {blocks.map((color, i) => (
           <div
             key={i}
-            className={`color-block ${colorMap[color]} rounded-sm border ${revealed ? 'animate-block-reveal' : 'opacity-0'}`}
+            className={`color-block ${colorMap[color]} rounded-sm ${revealed ? 'animate-block-reveal' : 'opacity-0'}`}
             style={{
               width: `${blockW}px`,
               height: `${blockH}px`,
               animationDelay: revealed ? `${Math.min(i * 0.012, 1.2)}s` : '0s',
-              borderColor: 'rgba(0,0,0,0.2)',
+              border: '1.5px solid rgba(0,0,0,0.15)',
             }}
           />
         ))}
       </div>
 
       {/* Hint */}
-      <p className="text-white/40 text-xs text-center italic">
+      <p
+        className="text-xs text-center italic"
+        style={{ color: 'oklch(0.65 0.08 220)' }}
+      >
         請自己數一數各顏色有幾格！
       </p>
     </div>
@@ -128,8 +136,13 @@ export default function ContextCardDisplay({ card, compact = false }: ContextCar
     return (
       <div className="chalk-card p-3 w-full">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-white/70 text-xs font-semibold">🗺️ 情境地圖</span>
-          <span className="text-yellow-400 text-xs font-bold">{card.name}</span>
+          <span className="text-slate-600 text-xs font-semibold">🗺️ 情境地圖</span>
+          <span
+            className="text-xs font-bold"
+            style={{ color: 'oklch(0.55 0.20 55)' }}
+          >
+            {card.name}
+          </span>
         </div>
         <ColorBlockGrid card={card} />
       </div>
@@ -149,24 +162,29 @@ export default function ContextCardDisplay({ card, compact = false }: ContextCar
           <span className="text-xl">🗺️</span>
           <div>
             <h3
-              className="text-white font-black text-base leading-tight"
+              className="text-slate-800 font-black text-base leading-tight"
               style={{ fontFamily: "'Noto Sans TC', sans-serif" }}
             >
               情境地圖牌
             </h3>
-            <p className="text-white/50 text-[11px]">{card.name} · {card.description}</p>
+            <p className="text-slate-400 text-[11px]">{card.name} · {card.description}</p>
           </div>
         </div>
         <button
           onClick={handleNewCard}
-          className="chalk-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs px-3 py-1.5 flex items-center gap-1 flex-shrink-0"
+          className="chalk-btn text-xs px-3 py-1.5 flex items-center gap-1 flex-shrink-0 border font-semibold transition-all hover:scale-105"
+          style={{
+            background: 'oklch(0.97 0.04 220)',
+            borderColor: 'oklch(0.82 0.10 220)',
+            color: 'oklch(0.50 0.12 220)',
+          }}
         >
           🔀 換牌
         </button>
       </div>
 
       {/* Thin divider */}
-      <div className="w-full h-px bg-white/10 mb-2 flex-shrink-0" />
+      <div className="w-full h-px bg-slate-200 mb-2 flex-shrink-0" />
 
       {/* Block grid — fills remaining space */}
       <div className="flex-1 flex items-center justify-center overflow-hidden">
@@ -175,8 +193,19 @@ export default function ContextCardDisplay({ card, compact = false }: ContextCar
 
       {/* Note if any */}
       {card.note && (
-        <div className="mt-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-1.5 flex-shrink-0">
-          <p className="text-yellow-400/70 text-xs">💡 {card.note}</p>
+        <div
+          className="mt-2 rounded-lg px-3 py-1.5 flex-shrink-0 border"
+          style={{
+            background: 'oklch(0.97 0.08 75)',
+            borderColor: 'oklch(0.85 0.14 75)',
+          }}
+        >
+          <p
+            className="text-xs"
+            style={{ color: 'oklch(0.55 0.18 75)' }}
+          >
+            💡 {card.note}
+          </p>
         </div>
       )}
     </div>

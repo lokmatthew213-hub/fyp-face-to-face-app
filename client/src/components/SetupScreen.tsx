@@ -1,16 +1,11 @@
 // ============================================================
-// 百分戰局 — Setup Screen
-// Design: Playful Classroom Chalkboard
-// Allows students to choose 2-4 players with visual layout preview
+// 百分戰局 — Setup Screen (Candy Pop Design)
+// Bright, cheerful colors for primary school students
 // ============================================================
 
 import { useState } from 'react';
 import { useGame } from '@/contexts/GameContext';
 import { PlayerCount, PLAYER_CONFIGS } from '@/lib/gameData';
-
-const HERO_BG = 'https://private-us-east-1.manuscdn.com/sessionFile/YKZsA5G4m0dseKBDQdO6Uw/sandbox/UfXXk2fX5Z6axyLj7gwYqo-img-1_1771830809000_na1fn_cGItaGVyby1iZw.png?x-oss-process=image/resize,w_1920,h_1920/format,webp/quality,q_80&Expires=1798761600&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvWUtac0E1RzRtMGRzZUtCRFFkTzZVdy9zYW5kYm94L1VmWFhrMmZYNVo2YXh5TGo3Z3dZcW8taW1nLTFfMTc3MTgzMDgwOTAwMF9uYTFmbl9jR0l0YUdWeWJ5MWlady5wbmc~eC1vc3MtcHJvY2Vzcz1pbWFnZS9yZXNpemUsd18xOTIwLGhfMTkyMC9mb3JtYXQsd2VicC9xdWFsaXR5LHFfODAiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTg3NjE2MDB9fX1dfQ__&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=f9XKeV2q7ID4~2r~NuJXF5onpST3BsbiCgRQKZVhp96WUE2lllrME7oo2saotxACIXZME0wyzpuk5S2D3ho9bUDbTeQ1ScK3skFdFvd-Rl8nyOdcLRVBS36q~idIJqoSkBvC-fz412InLkjpTWZet5Hb2gSDV687XqzyTU3iTlJE9hBczWXrn2LCACKPpKa3nC7Uz4CkS5EAIWbhTALvJIPECTeuQDw9IzpRCj7zVgIl2R~zgH5Gl64ePDDBzx9cBiapotp459LenqZcLfMOemJ8vvUK34bJC7PMucOpyTHy-FlcsOfnQFkspg~LGyqqccVOkPtvPoKuuG8ZMjtaxg__';
-
-const PLAYER_SETUP_IMG = 'https://private-us-east-1.manuscdn.com/sessionFile/YKZsA5G4m0dseKBDQdO6Uw/sandbox/UfXXk2fX5Z6axyLj7gwYqo-img-2_1771830821000_na1fn_cGItcGxheWVyLXNldHVw.png?x-oss-process=image/resize,w_1920,h_1920/format,webp/quality,q_80&Expires=1798761600&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvWUtac0E1RzRtMGRzZUtCRFFkTzZVdy9zYW5kYm94L1VmWFhrMmZYNVo2YXh5TGo3Z3dZcW8taW1nLTJfMTc3MTgzMDgyMTAwMF9uYTFmbl9jR0l0Y0d4aGVXVnlMWE5sZEhWdy5wbmc~eC1vc3MtcHJvY2Vzcz1pbWFnZS9yZXNpemUsd18xOTIwLGhfMTkyMC9mb3JtYXQsd2VicC9xdWFsaXR5LHFfODAiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTg3NjE2MDB9fX1dfQ__&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=IbCsQET8PvS4x79q6KMrMBPppd~NNO1ligC6UTtLY-KHr3nS-cqbsLbfmXSDB~d0h0Ok7kvcsStfQBc~FMjMFDScm~F6raV3JIjxPMhtMEk79lC4QY9W4M~GWbA2GOXp7e5fkDoi8tnIcAbkhSzvoJuve2HKvAx~Z5~Rp74ZK4ohWpQAPVenHSWuLIpg7wZcz6FW~tKDlgM0pbJFCWKT3wnjArevo431U5EtpKErB3D7ryBJYV~~AAU4xpsk8cZrLgh4HKgv8uO50LEemPDyF8xkywtyrvJBQpJTla~tlNYNcOmi9x8avCvnoh3Sj3A__';
 
 // Layout preview for each player count
 function LayoutPreview({ count }: { count: PlayerCount }) {
@@ -18,11 +13,11 @@ function LayoutPreview({ count }: { count: PlayerCount }) {
 
   if (count === 2) {
     return (
-      <div className="flex flex-col items-center gap-2 p-3">
+      <div className="flex flex-col items-center gap-2 p-2">
         <PlayerDot config={configs[0]} label="玩家1" />
-        <div className="w-16 h-px bg-white/20" />
-        <div className="w-10 h-10 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-xs text-white/50">桌</div>
-        <div className="w-16 h-px bg-white/20" />
+        <div className="w-12 h-px bg-slate-200" />
+        <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-xs text-slate-400">桌</div>
+        <div className="w-12 h-px bg-slate-200" />
         <PlayerDot config={configs[1]} label="玩家2" />
       </div>
     );
@@ -30,24 +25,23 @@ function LayoutPreview({ count }: { count: PlayerCount }) {
 
   if (count === 3) {
     return (
-      <div className="flex flex-col items-center gap-1 p-3">
+      <div className="flex flex-col items-center gap-1 p-2">
         <PlayerDot config={configs[0]} label="玩家1" />
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <PlayerDot config={configs[1]} label="玩家2" />
-          <div className="w-10 h-10 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-xs text-white/50">桌</div>
+          <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-xs text-slate-400">桌</div>
           <PlayerDot config={configs[2]} label="玩家3" />
         </div>
       </div>
     );
   }
 
-  // 4 players
   return (
-    <div className="flex flex-col items-center gap-1 p-3">
+    <div className="flex flex-col items-center gap-1 p-2">
       <PlayerDot config={configs[0]} label="玩家1" />
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <PlayerDot config={configs[3]} label="玩家4" />
-        <div className="w-10 h-10 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-xs text-white/50">桌</div>
+        <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-xs text-slate-400">桌</div>
         <PlayerDot config={configs[1]} label="玩家2" />
       </div>
       <PlayerDot config={configs[2]} label="玩家3" />
@@ -57,14 +51,14 @@ function LayoutPreview({ count }: { count: PlayerCount }) {
 
 function PlayerDot({ config, label }: { config: typeof PLAYER_CONFIGS[0]; label: string }) {
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className="flex flex-col items-center gap-0.5">
       <div
-        className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold"
-        style={{ borderColor: config.color, backgroundColor: `${config.color}33` }}
+        className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm"
+        style={{ borderColor: config.color, backgroundColor: `${config.color}25` }}
       >
         {config.emoji}
       </div>
-      <span className="text-xs text-white/60">{label}</span>
+      <span className="text-[10px] text-slate-400 font-semibold">{label}</span>
     </div>
   );
 }
@@ -84,121 +78,149 @@ export default function SetupScreen() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
-      {/* Hero background */}
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${HERO_BG})` }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" />
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-4 py-8 relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, oklch(0.96 0.07 220) 0%, oklch(0.93 0.09 250) 40%, oklch(0.95 0.07 280) 70%, oklch(0.96 0.06 200) 100%)',
+      }}
+    >
+      {/* Decorative bubbles */}
+      <div className="absolute top-8 left-8 w-20 h-20 rounded-full opacity-30 animate-float"
+        style={{ background: 'radial-gradient(circle, oklch(0.72 0.22 28), transparent)', animationDelay: '0s' }} />
+      <div className="absolute top-16 right-12 w-14 h-14 rounded-full opacity-25 animate-float"
+        style={{ background: 'radial-gradient(circle, oklch(0.75 0.22 55), transparent)', animationDelay: '1s' }} />
+      <div className="absolute bottom-12 left-16 w-16 h-16 rounded-full opacity-25 animate-float"
+        style={{ background: 'radial-gradient(circle, oklch(0.58 0.24 255), transparent)', animationDelay: '2s' }} />
+      <div className="absolute bottom-8 right-8 w-12 h-12 rounded-full opacity-30 animate-float"
+        style={{ background: 'radial-gradient(circle, oklch(0.68 0.22 145), transparent)', animationDelay: '0.5s' }} />
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 py-8">
-        {/* Title */}
-        <div className="text-center mb-8 animate-fade-in-up">
-          <div className="inline-block bg-black/30 backdrop-blur-sm rounded-2xl px-6 py-4 border border-white/20">
-            <h1
-              className="chalk-title text-4xl md:text-6xl text-white mb-1"
-              style={{ fontFamily: "'Noto Sans TC', sans-serif" }}
-            >
-              百分戰局
-            </h1>
-            <p className="text-white/70 text-lg md:text-xl font-semibold tracking-widest">
-              Percent Battle
-            </p>
-          </div>
-        </div>
-
-        {/* Setup card */}
-        <div
-          className="chalk-card w-full max-w-lg p-6 animate-fade-in-scale"
-          style={{ animationDelay: '0.15s', opacity: 0 }}
+      {/* Title */}
+      <div className="text-center mb-6 animate-fade-in-up">
+        <h1
+          className="font-black text-5xl md:text-7xl mb-1 leading-none"
+          style={{
+            fontFamily: "'Nunito', 'Noto Sans TC', sans-serif",
+            background: 'linear-gradient(135deg, oklch(0.68 0.24 28) 0%, oklch(0.75 0.22 55) 40%, oklch(0.58 0.24 255) 80%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            filter: 'drop-shadow(0 2px 8px oklch(0.68 0.24 28 / 0.25))',
+          }}
         >
-          <h2
-            className="text-center text-xl font-bold text-white mb-2"
-            style={{ fontFamily: "'Noto Sans TC', sans-serif" }}
-          >
-            🎮 選擇玩家人數
-          </h2>
-          <p className="text-center text-white/60 text-sm mb-6">
-            選擇今天有多少位指揮官參戰！
-          </p>
-
-          {/* Player count options */}
-          <div className="grid grid-cols-3 gap-3 mb-6">
-            {([2, 3, 4] as PlayerCount[]).map((count) => (
-              <button
-                key={count}
-                onClick={() => handleSelect(count)}
-                className={`
-                  chalk-btn flex flex-col items-center gap-2 py-4 border-2 transition-all duration-200
-                  ${selected === count
-                    ? 'bg-yellow-500/30 border-yellow-400 shadow-lg shadow-yellow-500/30 scale-105'
-                    : 'bg-white/5 border-white/20 hover:bg-white/10 hover:border-white/40'
-                  }
-                `}
-              >
-                <span className="text-3xl font-black text-white">{count}</span>
-                <span className="text-white/70 text-sm font-semibold">
-                  {count === 2 ? '對決' : count === 3 ? '三角' : '四方'}
-                </span>
-                <div className="mt-1">
-                  <LayoutPreview count={count} />
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* Selected layout info */}
-          <div className="bg-white/5 rounded-xl p-3 mb-6 border border-white/10">
-            <p className="text-center text-white/80 text-sm">
-              {selected === 2 && '⚔️ 兩位指揮官面對面對決！'}
-              {selected === 3 && '🔺 三位指揮官三角鼎立！'}
-              {selected === 4 && '🏟️ 四位指揮官四方混戰！'}
-            </p>
-          </div>
-
-          {/* Player colors preview */}
-          <div className="flex justify-center gap-3 mb-6">
-            {PLAYER_CONFIGS.slice(0, selected).map((cfg) => (
-              <div key={cfg.id} className="flex flex-col items-center gap-1">
-                <div
-                  className="w-10 h-10 rounded-full border-2 flex items-center justify-center text-lg"
-                  style={{ borderColor: cfg.color, backgroundColor: `${cfg.color}33` }}
-                >
-                  {cfg.emoji}
-                </div>
-                <span className="text-xs text-white/60">{cfg.name}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Start button */}
-          <button
-            onClick={handleStart}
-            className="w-full chalk-btn py-4 text-xl font-black text-slate-900 rounded-xl
-              bg-gradient-to-r from-yellow-400 to-yellow-500
-              hover:from-yellow-300 hover:to-yellow-400
-              shadow-lg shadow-yellow-500/40
-              transition-all duration-200 hover:scale-[1.02] active:scale-95"
-            style={{ fontFamily: "'Noto Sans TC', sans-serif" }}
-          >
-            🚀 開始戰局！
-          </button>
-        </div>
-
-        {/* Decorative player setup image */}
-        <div
-          className="mt-6 w-48 h-48 rounded-2xl overflow-hidden border-2 border-white/20 shadow-xl animate-fade-in-up opacity-0"
-          style={{ animationDelay: '0.3s' }}
+          百分戰局
+        </h1>
+        <p
+          className="text-slate-500 text-lg font-bold tracking-widest"
+          style={{ fontFamily: "'Nunito', sans-serif" }}
         >
-          <img
-            src={PLAYER_SETUP_IMG}
-            alt="玩家配置示意"
-            className="w-full h-full object-cover"
-          />
-        </div>
+          Percent Battle
+        </p>
       </div>
+
+      {/* Setup card */}
+      <div
+        className="chalk-card w-full max-w-lg p-6 animate-fade-in-scale"
+        style={{ animationDelay: '0.15s', opacity: 0 }}
+      >
+        <h2
+          className="text-center text-xl font-black text-slate-700 mb-1"
+          style={{ fontFamily: "'Noto Sans TC', sans-serif" }}
+        >
+          🎮 選擇玩家人數
+        </h2>
+        <p className="text-center text-slate-400 text-sm mb-5">
+          選擇今天有多少位指揮官參戰！
+        </p>
+
+        {/* Player count options */}
+        <div className="grid grid-cols-3 gap-3 mb-5">
+          {([2, 3, 4] as PlayerCount[]).map((count) => (
+            <button
+              key={count}
+              onClick={() => handleSelect(count)}
+              className={`
+                chalk-btn flex flex-col items-center gap-1 py-3 border-2 transition-all duration-200
+                ${selected === count
+                  ? 'border-transparent scale-105 shadow-lg'
+                  : 'bg-slate-50 border-slate-200 hover:border-slate-300 hover:bg-slate-100'
+                }
+              `}
+              style={selected === count ? {
+                background: 'linear-gradient(135deg, oklch(0.96 0.10 220), oklch(0.93 0.12 250))',
+                borderColor: 'oklch(0.70 0.18 240)',
+                boxShadow: '0 4px 20px oklch(0.60 0.18 240 / 0.25)',
+              } : {}}
+            >
+              <span
+                className="text-3xl font-black leading-none"
+                style={{ color: selected === count ? 'oklch(0.45 0.20 250)' : 'oklch(0.35 0.05 250)' }}
+              >
+                {count}
+              </span>
+              <span
+                className="text-sm font-bold"
+                style={{ color: selected === count ? 'oklch(0.50 0.18 250)' : 'oklch(0.55 0.05 250)' }}
+              >
+                {count === 2 ? '對決' : count === 3 ? '三角' : '四方'}
+              </span>
+              <div className="mt-1">
+                <LayoutPreview count={count} />
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Selected layout info */}
+        <div
+          className="rounded-xl p-3 mb-5 text-center"
+          style={{
+            background: 'linear-gradient(135deg, oklch(0.96 0.08 220), oklch(0.94 0.10 250))',
+            border: '1.5px solid oklch(0.82 0.10 230)',
+          }}
+        >
+          <p className="text-slate-600 text-sm font-semibold">
+            {selected === 2 && '⚔️ 兩位指揮官面對面對決！'}
+            {selected === 3 && '🔺 三位指揮官三角鼎立！'}
+            {selected === 4 && '🏟️ 四位指揮官四方混戰！'}
+          </p>
+        </div>
+
+        {/* Player colors preview */}
+        <div className="flex justify-center gap-4 mb-6">
+          {PLAYER_CONFIGS.slice(0, selected).map((cfg) => (
+            <div key={cfg.id} className="flex flex-col items-center gap-1">
+              <div
+                className="w-12 h-12 rounded-2xl border-2 flex items-center justify-center text-xl shadow-md"
+                style={{
+                  borderColor: cfg.color,
+                  backgroundColor: `${cfg.color}18`,
+                  boxShadow: `0 4px 12px ${cfg.color}30`,
+                }}
+              >
+                {cfg.emoji}
+              </div>
+              <span className="text-xs text-slate-500 font-semibold">{cfg.name}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Start button */}
+        <button
+          onClick={handleStart}
+          className="w-full py-4 text-xl font-black text-white rounded-2xl transition-all duration-200 hover:scale-[1.02] active:scale-95"
+          style={{
+            fontFamily: "'Noto Sans TC', sans-serif",
+            background: 'linear-gradient(135deg, oklch(0.68 0.24 28), oklch(0.72 0.22 15))',
+            boxShadow: '0 6px 24px oklch(0.68 0.24 28 / 0.45), 0 2px 8px oklch(0.68 0.24 28 / 0.25)',
+          }}
+        >
+          🚀 開始戰局！
+        </button>
+      </div>
+
+      {/* Footer */}
+      <p className="mt-4 text-slate-400 text-xs animate-fade-in-up" style={{ animationDelay: '0.4s', opacity: 0 }}>
+        達到 50 分者勝利 · 約 15 分鐘
+      </p>
     </div>
   );
 }
