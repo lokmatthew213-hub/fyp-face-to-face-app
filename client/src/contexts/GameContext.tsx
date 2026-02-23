@@ -11,8 +11,12 @@ import {
   WinType,
   FireSubType,
   WinDeclaration,
+  Player,
+  ScoreEvent,
   createPlayers,
   drawRandomContextCard,
+  calculateScoreChanges,
+  WIN_SCORE,
 } from '@/lib/gameData';
 
 type GameAction =
@@ -23,9 +27,10 @@ type GameAction =
   | { type: 'CHOOSE_WIN_TYPE'; winType: WinType }
   | { type: 'SET_PHOTO'; photoDataUrl: string }
   | { type: 'SET_AI_RESULT'; isValid: boolean; message: string; reasoning: string }
-  | { type: 'CHOOSE_FIRE_SUBTYPE'; subType: FireSubType }
-  | { type: 'CHOOSE_RAID_TARGET'; targetId: number }
-  | { type: 'CHOOSE_TRAP_ANSWERER'; answererId: number | null }
+  | { type: 'SET_CARD_COUNT'; cardCount: number }
+  | { type: 'CHOOSE_FIRE_SUBTYPE'; subType: FireSubType; raidTargetId?: number }
+  | { type: 'CHOOSE_TRAP_ANSWERER'; answererId: number | null; answererCardCount?: number }
+  | { type: 'CONFIRM_ROUND_END' }
   | { type: 'SET_PHASE'; phase: GamePhase }
   | { type: 'CANCEL_DECLARATION' }
   | { type: 'RESET_GAME' };
@@ -37,7 +42,43 @@ const initialState: GameState = {
   currentContextCard: null,
   activeDeclaration: null,
   declaringPlayerId: null,
+  round: 0,
+  scoreLog: [],
+  winnerId: null,
+  lastRoundSummary: null,
 };
+
+function applyScoreChanges(
+  players: Player[],
+  changes: Array<{ playerId: number; delta: number; reason: string }>,
+  round: number,
+  scoreLog: ScoreEvent[]
+): { players: Player[]; scoreLog: ScoreEvent[]; winnerId: number | null } {
+  let winnerId: number | null = null;
+  const newPlayers = players.map((p) => {
+    const change = changes.find((c) => c.playerId === p.id);
+    if (!change || change.delta === 0) return p;
+    const newTotal = Math.max(0, p.totalScore + change.delta);
+    return { ...p, totalScore: newTotal };
+  });
+
+  // Check win condition
+  for (const p of newPlayers) {
+    if (p.totalScore >= WIN_SCORE) {
+      winnerId = p.id;
+      break;
+    }
+  }
+
+  const newLog: ScoreEvent[] = [
+    ...scoreLog,
+    ...changes
+      .filter((c) => c.delta !== 0)
+      .map((c) => ({ round, playerId: c.playerId, delta: c.delta, reason: c.reason })),
+  ];
+
+  return { players: newPlayers, scoreLog: newLog, winnerId };
+}
 
 function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
@@ -52,6 +93,10 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         currentContextCard: drawRandomContextCard(),
         activeDeclaration: null,
         declaringPlayerId: null,
+        round: 1,
+        scoreLog: [],
+        winnerId: null,
+        lastRoundSummary: null,
       };
 
     case 'DRAW_NEW_CARD':
@@ -74,7 +119,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'CHOOSE_WIN_TYPE':
       return {
         ...state,
-        phase: action.winType === 'fire' ? 'fire-photo' : 'fire-photo',
+        phase: 'fire-photo',
         activeDeclaration: state.activeDeclaration
           ? { ...state.activeDeclaration, winType: action.winType }
           : null,
@@ -103,35 +148,86 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           : null,
       };
 
-    case 'CHOOSE_FIRE_SUBTYPE':
+    case 'SET_CARD_COUNT':
       return {
         ...state,
-        // 'self' goes straight back to playing; 'raid' also returns to playing (raid target already set)
-        phase: 'playing',
         activeDeclaration: state.activeDeclaration
-          ? { ...state.activeDeclaration, fireSubType: action.subType }
+          ? { ...state.activeDeclaration, cardCount: action.cardCount }
           : null,
-        declaringPlayerId: null,
       };
 
-    case 'CHOOSE_RAID_TARGET':
-      return {
-        ...state,
-        phase: 'playing',
-        activeDeclaration: state.activeDeclaration
-          ? { ...state.activeDeclaration, raidTargetId: action.targetId }
-          : null,
-        declaringPlayerId: null,
+    case 'CHOOSE_FIRE_SUBTYPE': {
+      // Build the complete declaration with subtype and optional raidTarget
+      const updatedDecl: WinDeclaration = {
+        ...state.activeDeclaration!,
+        fireSubType: action.subType,
+        raidTargetId: action.raidTargetId,
       };
 
-    case 'CHOOSE_TRAP_ANSWERER':
+      // Calculate score changes
+      const changes = calculateScoreChanges(updatedDecl, state.players);
+      const { players, scoreLog, winnerId } = applyScoreChanges(
+        state.players,
+        changes,
+        state.round,
+        state.scoreLog
+      );
+
+      const summary = { events: changes };
+
+      return {
+        ...state,
+        phase: winnerId ? 'game-over' : 'round-end',
+        players,
+        scoreLog,
+        winnerId,
+        activeDeclaration: updatedDecl,
+        declaringPlayerId: null,
+        lastRoundSummary: summary,
+      };
+    }
+
+    case 'CHOOSE_TRAP_ANSWERER': {
+      const updatedDecl: WinDeclaration = {
+        ...state.activeDeclaration!,
+        trapAnswererId: action.answererId ?? undefined,
+        answererCardCount: action.answererCardCount,
+      };
+
+      const changes = calculateScoreChanges(updatedDecl, state.players);
+      const { players, scoreLog, winnerId } = applyScoreChanges(
+        state.players,
+        changes,
+        state.round,
+        state.scoreLog
+      );
+
+      const summary = { events: changes };
+
+      return {
+        ...state,
+        phase: winnerId ? 'game-over' : 'round-end',
+        players,
+        scoreLog,
+        winnerId,
+        activeDeclaration: updatedDecl,
+        declaringPlayerId: null,
+        lastRoundSummary: summary,
+      };
+    }
+
+    case 'CONFIRM_ROUND_END':
+      // Start next round: draw new card, reset round scores, keep totalScores
       return {
         ...state,
         phase: 'playing',
-        activeDeclaration: state.activeDeclaration
-          ? { ...state.activeDeclaration, trapAnswererId: action.answererId ?? undefined }
-          : null,
+        currentContextCard: drawRandomContextCard(),
+        activeDeclaration: null,
         declaringPlayerId: null,
+        round: state.round + 1,
+        lastRoundSummary: null,
+        // Reset per-round score (totalScore persists)
+        players: state.players.map((p) => ({ ...p, score: 0 })),
       };
 
     case 'SET_PHASE':
@@ -162,9 +258,10 @@ interface GameContextValue {
   chooseWinType: (winType: WinType) => void;
   setPhoto: (dataUrl: string) => void;
   setAIResult: (isValid: boolean, message: string, reasoning: string) => void;
-  chooseFireSubtype: (subType: FireSubType) => void;
-  chooseRaidTarget: (targetId: number) => void;
-  chooseTrapAnswerer: (answererId: number | null) => void;
+  setCardCount: (count: number) => void;
+  chooseFireSubtype: (subType: FireSubType, raidTargetId?: number) => void;
+  chooseTrapAnswerer: (answererId: number | null, answererCardCount?: number) => void;
+  confirmRoundEnd: () => void;
   setPhase: (phase: GamePhase) => void;
   cancelDeclaration: () => void;
   resetGame: () => void;
@@ -187,12 +284,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SET_PHOTO', photoDataUrl }), []);
   const setAIResult = useCallback((isValid: boolean, message: string, reasoning: string) =>
     dispatch({ type: 'SET_AI_RESULT', isValid, message, reasoning }), []);
-  const chooseFireSubtype = useCallback((subType: FireSubType) =>
-    dispatch({ type: 'CHOOSE_FIRE_SUBTYPE', subType }), []);
-  const chooseRaidTarget = useCallback((targetId: number) =>
-    dispatch({ type: 'CHOOSE_RAID_TARGET', targetId }), []);
-  const chooseTrapAnswerer = useCallback((answererId: number | null) =>
-    dispatch({ type: 'CHOOSE_TRAP_ANSWERER', answererId }), []);
+  const setCardCount = useCallback((cardCount: number) =>
+    dispatch({ type: 'SET_CARD_COUNT', cardCount }), []);
+  const chooseFireSubtype = useCallback((subType: FireSubType, raidTargetId?: number) =>
+    dispatch({ type: 'CHOOSE_FIRE_SUBTYPE', subType, raidTargetId }), []);
+  const chooseTrapAnswerer = useCallback((answererId: number | null, answererCardCount?: number) =>
+    dispatch({ type: 'CHOOSE_TRAP_ANSWERER', answererId, answererCardCount }), []);
+  const confirmRoundEnd = useCallback(() =>
+    dispatch({ type: 'CONFIRM_ROUND_END' }), []);
   const setPhase = useCallback((phase: GamePhase) =>
     dispatch({ type: 'SET_PHASE', phase }), []);
   const cancelDeclaration = useCallback(() =>
@@ -209,9 +308,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       chooseWinType,
       setPhoto,
       setAIResult,
+      setCardCount,
       chooseFireSubtype,
-      chooseRaidTarget,
       chooseTrapAnswerer,
+      confirmRoundEnd,
       setPhase,
       cancelDeclaration,
       resetGame,

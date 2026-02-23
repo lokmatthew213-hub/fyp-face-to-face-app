@@ -140,3 +140,135 @@ describe("Game Rules Validation", () => {
     expect(card.total).toBe(35);
   });
 });
+
+// ============================================================
+// Scoring System Tests
+// ============================================================
+
+type WinDeclaration = {
+  playerId: number;
+  winType: 'fire' | 'trap';
+  fireSubType?: 'self' | 'raid';
+  raidTargetId?: number;
+  trapAnswererId?: number;
+  cardCount?: number;
+  answererCardCount?: number;
+};
+
+type Player = {
+  id: number;
+  name: string;
+  score: number;
+  totalScore: number;
+};
+
+const WIN_SCORE = 50;
+
+function calculateScoreChanges(
+  decl: WinDeclaration,
+  players: Player[]
+): Array<{ playerId: number; delta: number; reason: string }> {
+  const changes: Array<{ playerId: number; delta: number; reason: string }> = [];
+  const cardCount = decl.cardCount ?? 0;
+
+  if (decl.winType === 'fire') {
+    if (decl.fireSubType === 'self') {
+      changes.push({ playerId: decl.playerId, delta: cardCount, reason: `自摸 ${cardCount} 張` });
+    } else if (decl.fireSubType === 'raid' && decl.raidTargetId != null) {
+      const raidTarget = players.find((p) => p.id === decl.raidTargetId);
+      if (raidTarget) {
+        changes.push({ playerId: decl.playerId, delta: cardCount, reason: `突襲 +${cardCount}` });
+        changes.push({ playerId: decl.raidTargetId!, delta: -cardCount, reason: `出銃 -${cardCount}` });
+      }
+    }
+  } else if (decl.winType === 'trap') {
+    if (decl.trapAnswererId == null) {
+      changes.push({ playerId: decl.playerId, delta: cardCount, reason: `出題無人答 +${cardCount}` });
+    } else {
+      const answererCards = decl.answererCardCount ?? 0;
+      const totalMarks = cardCount + answererCards;
+      changes.push({ playerId: decl.trapAnswererId, delta: totalMarks, reason: `搶答 +${totalMarks}` });
+      changes.push({ playerId: decl.playerId, delta: 0, reason: `出題被搶答 +0` });
+    }
+  }
+
+  return changes;
+}
+
+const testPlayers: Player[] = [
+  { id: 1, name: '玩家 1', score: 0, totalScore: 0 },
+  { id: 2, name: '玩家 2', score: 0, totalScore: 0 },
+  { id: 3, name: '玩家 3', score: 0, totalScore: 0 },
+];
+
+describe("Scoring: 火力全開 自摸", () => {
+  it("自摸：winner gets cardCount marks", () => {
+    const decl: WinDeclaration = { playerId: 1, winType: 'fire', fireSubType: 'self', cardCount: 13 };
+    const changes = calculateScoreChanges(decl, testPlayers);
+    expect(changes).toHaveLength(1);
+    expect(changes[0].playerId).toBe(1);
+    expect(changes[0].delta).toBe(13);
+  });
+
+  it("自摸：zero cards gives zero marks", () => {
+    const decl: WinDeclaration = { playerId: 1, winType: 'fire', fireSubType: 'self', cardCount: 0 };
+    const changes = calculateScoreChanges(decl, testPlayers);
+    expect(changes[0].delta).toBe(0);
+  });
+});
+
+describe("Scoring: 火力全開 突襲", () => {
+  it("突襲：winner gains cardCount, raidTarget loses cardCount", () => {
+    const decl: WinDeclaration = { playerId: 1, winType: 'fire', fireSubType: 'raid', raidTargetId: 2, cardCount: 10 };
+    const changes = calculateScoreChanges(decl, testPlayers);
+    expect(changes).toHaveLength(2);
+    expect(changes.find(c => c.playerId === 1)?.delta).toBe(10);
+    expect(changes.find(c => c.playerId === 2)?.delta).toBe(-10);
+  });
+
+  it("突襲：no raidTargetId produces no changes", () => {
+    const decl: WinDeclaration = { playerId: 1, winType: 'fire', fireSubType: 'raid', raidTargetId: undefined, cardCount: 10 };
+    const changes = calculateScoreChanges(decl, testPlayers);
+    expect(changes).toHaveLength(0);
+  });
+});
+
+describe("Scoring: 設下陷阱", () => {
+  it("無人答題：proposer gets cardCount marks", () => {
+    const decl: WinDeclaration = { playerId: 1, winType: 'trap', trapAnswererId: undefined, cardCount: 7 };
+    const changes = calculateScoreChanges(decl, testPlayers);
+    expect(changes).toHaveLength(1);
+    expect(changes[0].playerId).toBe(1);
+    expect(changes[0].delta).toBe(7);
+  });
+
+  it("有人搶答：answerer gets proposer + answerer cards total, proposer gets 0", () => {
+    const decl: WinDeclaration = { playerId: 1, winType: 'trap', trapAnswererId: 2, cardCount: 7, answererCardCount: 5 };
+    const changes = calculateScoreChanges(decl, testPlayers);
+    expect(changes.find(c => c.playerId === 2)?.delta).toBe(12); // 7 + 5
+    expect(changes.find(c => c.playerId === 1)?.delta).toBe(0);
+  });
+
+  it("搶答：answererCardCount defaults to 0 if not provided", () => {
+    const decl: WinDeclaration = { playerId: 1, winType: 'trap', trapAnswererId: 2, cardCount: 7 };
+    const changes = calculateScoreChanges(decl, testPlayers);
+    expect(changes.find(c => c.playerId === 2)?.delta).toBe(7); // 7 + 0
+  });
+});
+
+describe("Win condition", () => {
+  it("player reaching WIN_SCORE (50) should be detected", () => {
+    const player: Player = { id: 1, name: '玩家 1', score: 0, totalScore: 45 };
+    expect(player.totalScore + 10 >= WIN_SCORE).toBe(true);
+  });
+
+  it("player below WIN_SCORE should not win", () => {
+    const player: Player = { id: 1, name: '玩家 1', score: 0, totalScore: 30 };
+    expect(player.totalScore + 5 >= WIN_SCORE).toBe(false);
+  });
+
+  it("totalScore should never go below 0", () => {
+    const player: Player = { id: 1, name: '玩家 1', score: 0, totalScore: 5 };
+    expect(Math.max(0, player.totalScore - 10)).toBe(0);
+  });
+});

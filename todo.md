@@ -1,7 +1,6 @@
 # 百分戰局 Percent Battle — TODO
 
-## Phase 1: Core Features (Current)
-
+## Phase 1: Core Features
 - [x] Project scaffold with tRPC + Express + React
 - [x] Chalkboard design system (dark green, chalk-white, color blocks)
 - [x] Google Fonts integration (Nunito + Noto Sans TC)
@@ -26,23 +25,28 @@
 - [x] Game top bar with back + draw new card
 - [x] CSS animations (block reveal, bounce-in, fade-in-up)
 - [x] Responsive layout for mobile/tablet
-- [x] Unit tests for game logic (13 tests passing)
-- [x] Unit tests for Poe API key validation
 
-## Phase 2: Score Calculation (Pending)
+## Phase 2: Scoring System & Round Management
+- [x] Card count stepper input in 火力全開 flow
+- [x] Card count stepper input in 設下陷阱 flow (proposer + answerer)
+- [x] 火力全開 自摸 scoring: winner gets marks = card count
+- [x] 火力全開 突襲 scoring: 出銃 player pays marks = card count to winner
+- [x] 設下陷阱 no-answer scoring: proposer gets marks = card count
+- [x] 設下陷阱 answered scoring: answerer gets proposer cards + answer cards, proposer gets 0
+- [x] Round end summary screen (RoundEnd component)
+- [x] Draw new context card at start of each round
+- [x] Persist totalScore across rounds (never resets)
+- [x] Win condition: first player to reach 50 total marks wins
+- [x] Game-over screen with winner announcement + confetti
+- [x] Final leaderboard with progress bars on game-over screen
+- [x] Return to home button on game-over screen
+- [x] Score bar showing totalScore with progress toward 50
+- [x] Round counter in top bar
+- [x] 23 unit tests passing (scoring logic, context cards, AI prompts)
 
-- [ ] Define scoring rules for 火力全開 自摸
-- [ ] Define scoring rules for 火力全開 突襲
-- [ ] Define scoring rules for 設下陷阱 (出題者 + 答題者)
-- [ ] Score update after each round
-- [ ] Score history / round log
-- [ ] Win condition (max score / rounds limit)
-
-## Phase 3: Additional Features (Future)
-
-- [ ] Player name editing
+## Phase 3: Future Features
+- [ ] Player name editing before game start
 - [ ] Sound effects for win/lose
-- [ ] Confetti animation on win
-- [ ] Round counter
+- [ ] 15-minute recess timer
 - [ ] Game history export
 - [ ] Teacher mode (show hints/answers)

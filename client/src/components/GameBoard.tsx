@@ -6,10 +6,12 @@
 // ============================================================
 
 import { useGame } from '@/contexts/GameContext';
-import { getPlayerConfig } from '@/lib/gameData';
+import { getPlayerConfig, WIN_SCORE } from '@/lib/gameData';
 import ContextCardDisplay from './ContextCardDisplay';
 import PlayerZone from './PlayerZone';
 import WinDeclaration from './WinDeclaration';
+import RoundEnd from './RoundEnd';
+import GameOver from './GameOver';
 
 // ============================================================
 // 2-player layout: top vs bottom
@@ -141,7 +143,7 @@ function GameTopBar() {
           百分戰局
         </span>
         <span className="text-white/40 text-xs">
-          {state.playerCount}人對戰
+          {state.playerCount}人 · 第{state.round}回合
         </span>
       </div>
       <button
@@ -155,28 +157,42 @@ function GameTopBar() {
 }
 
 // ============================================================
-// Score display overlay (bottom center)
+// Score bar — shows totalScore with progress toward 50
 // ============================================================
 function ScoreBar() {
   const { state } = useGame();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-center gap-3 px-4 py-2 bg-black/20 backdrop-blur-sm border-t border-white/10">
+    <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-center gap-2 px-3 py-2 bg-black/20 backdrop-blur-sm border-t border-white/10">
       {state.players.map((p) => {
         const cfg = getPlayerConfig(p.id);
+        const pct = Math.min(100, (p.totalScore / WIN_SCORE) * 100);
         return (
           <div
             key={p.id}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold"
+            className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl min-w-[56px]"
             style={{
-              backgroundColor: `${cfg.color}22`,
-              border: `1px solid ${cfg.color}44`,
-              color: cfg.color,
+              backgroundColor: `${cfg.color}18`,
+              border: `1px solid ${cfg.color}40`,
             }}
           >
-            <span>{cfg.emoji}</span>
-            <span>{p.name}</span>
-            <span className="text-white/80 font-black">{p.score}</span>
+            <div className="flex items-center gap-1">
+              <span className="text-sm">{cfg.emoji}</span>
+              <span
+                className="font-black text-sm leading-none"
+                style={{ color: cfg.color, fontFamily: "'Nunito', sans-serif" }}
+              >
+                {p.totalScore}
+              </span>
+            </div>
+            {/* Progress bar toward 50 */}
+            <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{ width: `${pct}%`, backgroundColor: cfg.color }}
+              />
+            </div>
+            <span className="text-white/30 text-[9px]">/{WIN_SCORE}</span>
           </div>
         );
       })}
@@ -192,8 +208,13 @@ export default function GameBoard() {
 
   const isModalOpen = [
     'win-declare', 'fire-photo', 'fire-verify',
-    'fire-result', 'fire-subtype', 'trap-result', 'trap-answerer'
+    'fire-result', 'fire-subtype', 'trap-result',
   ].includes(state.phase);
+
+  // Game over screen
+  if (state.phase === 'game-over') {
+    return <GameOver />;
+  }
 
   return (
     <div className="relative min-h-screen">
@@ -213,6 +234,9 @@ export default function GameBoard() {
 
       {/* Win declaration modal flow */}
       {isModalOpen && <WinDeclaration />}
+
+      {/* Round end summary */}
+      {state.phase === 'round-end' && <RoundEnd />}
     </div>
   );
 }

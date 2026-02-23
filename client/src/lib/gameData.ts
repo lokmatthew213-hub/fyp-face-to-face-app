@@ -11,7 +11,8 @@ export interface Player {
   color: string;
   colorName: string;
   emoji: string;
-  score: number;
+  score: number;       // current round score (resets each round)
+  totalScore: number;  // cumulative total across all rounds (never resets)
 }
 
 export interface ContextCard {
@@ -34,8 +35,10 @@ export interface WinDeclaration {
   playerId: number;
   winType: WinType;
   fireSubType?: FireSubType;
-  raidTargetId?: number; // who threw the card (for 突襲)
-  trapAnswererId?: number; // who answered the question (for 設下陷阱)
+  raidTargetId?: number;    // who threw the card (for 突襲)
+  trapAnswererId?: number;  // who answered the question (for 設下陷阱)
+  cardCount?: number;       // number of cards used by declaring player
+  answererCardCount?: number; // number of cards used by answerer (for 設下陷阱)
   photoDataUrl?: string;
   aiVerified?: boolean;
   aiMessage?: string;
@@ -43,17 +46,25 @@ export interface WinDeclaration {
 }
 
 export type GamePhase =
-  | 'setup'        // Player count selection
-  | 'playing'      // Main game board
-  | 'win-declare'  // Player tapped their icon
-  | 'win-type'     // Choose 火力全開 or 設下陷阱
-  | 'fire-photo'   // Take photo for 火力全開
-  | 'fire-verify'  // AI verifying
-  | 'fire-result'  // Show AI result
-  | 'fire-subtype' // Choose 自摸 or 突襲
-  | 'trap-verify'  // AI verifying 設下陷阱
-  | 'trap-result'  // Show trap result
-  | 'trap-answerer'; // Choose who answered
+  | 'setup'          // Player count selection
+  | 'playing'        // Main game board
+  | 'win-declare'    // Player tapped their icon → choose win type
+  | 'fire-photo'     // Take photo for 火力全開
+  | 'fire-verify'    // AI verifying 火力全開
+  | 'fire-result'    // Show AI result for 火力全開
+  | 'fire-subtype'   // Choose 自摸 or 突襲 (after valid 火力全開)
+  | 'trap-verify'    // AI verifying 設下陷阱
+  | 'trap-result'    // Show trap result + answerer selection
+  | 'trap-answerer'  // (legacy, merged into trap-result)
+  | 'round-end'      // Marks awarded, show summary before next round
+  | 'game-over';     // Someone reached 50 marks
+
+export interface ScoreEvent {
+  round: number;
+  playerId: number;
+  delta: number;
+  reason: string;
+}
 
 export interface GameState {
   phase: GamePhase;
@@ -62,6 +73,14 @@ export interface GameState {
   currentContextCard: ContextCard | null;
   activeDeclaration: WinDeclaration | null;
   declaringPlayerId: number | null;
+  round: number;
+  scoreLog: ScoreEvent[];
+  winnerId: number | null;
+  lastRoundSummary: RoundSummary | null;
+}
+
+export interface RoundSummary {
+  events: Array<{ playerId: number; delta: number; reason: string }>;
 }
 
 // ============================================================
@@ -214,11 +233,82 @@ export function createPlayers(count: PlayerCount): Player[] {
     colorName: PLAYER_CONFIGS[i].colorName,
     emoji: PLAYER_CONFIGS[i].emoji,
     score: 0,
+    totalScore: 0,
   }));
 }
 
 export function getPlayerConfig(id: number) {
   return PLAYER_CONFIGS[id - 1];
+}
+
+// ============================================================
+// Scoring logic
+// ============================================================
+export const WIN_SCORE = 50; // First to reach this wins the game
+
+/**
+ * Calculate score changes for a completed round.
+ * Returns array of { playerId, delta, reason } for each affected player.
+ */
+export function calculateScoreChanges(
+  decl: WinDeclaration,
+  players: Player[]
+): Array<{ playerId: number; delta: number; reason: string }> {
+  const changes: Array<{ playerId: number; delta: number; reason: string }> = [];
+  const cardCount = decl.cardCount ?? 0;
+
+  if (decl.winType === 'fire') {
+    if (decl.fireSubType === 'self') {
+      // 自摸：winner gets cardCount marks
+      changes.push({
+        playerId: decl.playerId,
+        delta: cardCount,
+        reason: `🔥 自摸食糊！用了 ${cardCount} 張牌`,
+      });
+    } else if (decl.fireSubType === 'raid' && decl.raidTargetId != null) {
+      // 突襲：the player who threw the card (raidTarget) pays cardCount marks to winner
+      // Winner gains cardCount, raidTarget loses cardCount
+      const raidTarget = players.find((p) => p.id === decl.raidTargetId);
+      if (raidTarget) {
+        changes.push({
+          playerId: decl.playerId,
+          delta: cardCount,
+          reason: `⚡ 突襲！${raidTarget.name} 出銃，獲得 ${cardCount} 分`,
+        });
+        changes.push({
+          playerId: decl.raidTargetId!,
+          delta: -cardCount,
+          reason: `💸 出銃！被 ${players.find(p => p.id === decl.playerId)?.name} 突襲，失去 ${cardCount} 分`,
+        });
+      }
+    }
+  } else if (decl.winType === 'trap') {
+    if (decl.trapAnswererId == null) {
+      // No one answered: proposer gets cardCount marks
+      changes.push({
+        playerId: decl.playerId,
+        delta: cardCount,
+        reason: `🪤 出題無人答！獲得 ${cardCount} 分`,
+      });
+    } else {
+      // Someone answered: answerer gets proposer cards + answerer cards, proposer gets 0
+      const answererCards = decl.answererCardCount ?? 0;
+      const totalMarks = cardCount + answererCards;
+      changes.push({
+        playerId: decl.trapAnswererId,
+        delta: totalMarks,
+        reason: `🎯 搶答成功！拿走題目分 ${cardCount} + 答案分 ${answererCards} = ${totalMarks} 分`,
+      });
+      // Proposer gets 0 (no change needed, but log it)
+      changes.push({
+        playerId: decl.playerId,
+        delta: 0,
+        reason: `🪤 出題被搶答，得 0 分`,
+      });
+    }
+  }
+
+  return changes;
 }
 
 // Build the AI prompt for 火力全開 verification
