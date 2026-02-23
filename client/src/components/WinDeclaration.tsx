@@ -142,10 +142,11 @@ function WinTypeStep() {
 }
 
 // ============================================================
-// Step 2: Photo capture
+// Step 2: Photo capture — camera-first with fallback file picker
 // ============================================================
 function PhotoStep() {
   const { state, setPhoto, cancelDeclaration } = useGame();
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -174,12 +175,8 @@ function PhotoStep() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) handleFile(file);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files?.[0];
-    if (file) handleFile(file);
+    // Reset input so same file can be re-selected
+    e.target.value = '';
   };
 
   const handleSubmit = () => {
@@ -219,41 +216,68 @@ function PhotoStep() {
           </p>
         </div>
 
-        {/* Upload zone */}
-        <div
-          className="photo-upload-zone p-4 mb-4 text-center cursor-pointer"
-          onClick={() => fileInputRef.current?.click()}
-          onDrop={handleDrop}
-          onDragOver={(e) => e.preventDefault()}
-        >
-          {preview ? (
-            <div className="relative">
-              <img
-                src={preview}
-                alt="預覽"
-                className="max-h-48 mx-auto rounded-lg object-contain"
-              />
-              <button
-                onClick={(e) => { e.stopPropagation(); setPreview(null); }}
-                className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white text-xs flex items-center justify-center hover:bg-black/80"
-              >
-                ✕
-              </button>
+        {/* Preview area */}
+        {preview ? (
+          <div className="relative mb-4">
+            <img
+              src={preview}
+              alt="預覽"
+              className="w-full max-h-44 rounded-xl object-contain bg-black/20"
+            />
+            <button
+              onClick={() => setPreview(null)}
+              className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 text-white text-xs flex items-center justify-center hover:bg-black/80 transition-all"
+            >
+              ✕
+            </button>
+            <div className="absolute bottom-2 left-2 bg-green-500/80 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
+              ✓ 已選擇
             </div>
-          ) : (
-            <div className="py-6">
-              <div className="text-4xl mb-2">📷</div>
-              <p className="text-white/60 text-sm font-semibold">點擊拍照 / 選擇圖片</p>
-              <p className="text-white/40 text-xs mt-1">或拖放圖片到這裡</p>
-            </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          /* Camera / upload buttons */
+          <div className="flex gap-3 mb-4">
+            {/* Primary: Open camera directly */}
+            <button
+              onClick={() => cameraInputRef.current?.click()}
+              className="flex-1 photo-upload-zone flex flex-col items-center justify-center gap-2 py-5 transition-all hover:border-yellow-400"
+            >
+              <span className="text-4xl">📷</span>
+              <span className="text-white/80 text-sm font-black" style={{ fontFamily: "'Noto Sans TC', sans-serif" }}>
+                拍照
+              </span>
+              <span className="text-white/40 text-xs">開啟相機</span>
+            </button>
 
+            {/* Secondary: Choose from gallery */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex-1 photo-upload-zone flex flex-col items-center justify-center gap-2 py-5 transition-all hover:border-blue-400"
+            >
+              <span className="text-4xl">🖼️</span>
+              <span className="text-white/80 text-sm font-black" style={{ fontFamily: "'Noto Sans TC', sans-serif" }}>
+                相簿
+              </span>
+              <span className="text-white/40 text-xs">從相簿選擇</span>
+            </button>
+          </div>
+        )}
+
+        {/* Hidden inputs */}
+        {/* Camera input — opens camera directly on mobile */}
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={handleInputChange}
+        />
+        {/* File input — opens gallery/file picker */}
         <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
-          capture="environment"
           className="hidden"
           onChange={handleInputChange}
         />
@@ -262,7 +286,7 @@ function PhotoStep() {
           <p className="text-red-400 text-xs text-center mb-3">{error}</p>
         )}
 
-        {/* Buttons */}
+        {/* Action buttons */}
         <div className="flex gap-2">
           <button
             onClick={cancelDeclaration}

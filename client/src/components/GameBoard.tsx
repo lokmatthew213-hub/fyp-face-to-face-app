@@ -1,8 +1,8 @@
 // ============================================================
-// 百分戰局 — Game Board
-// Design: Playful Classroom Chalkboard
-// Layout adapts to 2, 3, or 4 players
-// Players are positioned on different sides of the screen
+// 百分戰局 — Game Board (Landscape Layout)
+// Device is held horizontally (landscape)
+// ALL players are at the BOTTOM — text always faces the same way
+// Context card fills the TOP area as a wide horizontal rectangle
 // ============================================================
 
 import { useGame } from '@/contexts/GameContext';
@@ -14,127 +14,16 @@ import RoundEnd from './RoundEnd';
 import GameOver from './GameOver';
 
 // ============================================================
-// 2-player layout: top vs bottom
-// ============================================================
-function TwoPlayerLayout() {
-  const { state } = useGame();
-  const [p1, p2] = state.players;
-
-  return (
-    <div className="flex flex-col h-screen max-h-screen overflow-hidden">
-      {/* Player 1 - top (rotated 180°) */}
-      <div className="flex justify-center pt-3 pb-2">
-        <div className="rotate-180">
-          <PlayerZone player={p1} position="top" />
-        </div>
-      </div>
-
-      {/* Context card - center */}
-      <div className="flex-1 flex items-center justify-center px-4 py-2 overflow-hidden">
-        <div className="w-full max-w-sm">
-          <ContextCardDisplay card={state.currentContextCard!} />
-        </div>
-      </div>
-
-      {/* Player 2 - bottom */}
-      <div className="flex justify-center pb-3 pt-2">
-        <PlayerZone player={p2} position="bottom" />
-      </div>
-    </div>
-  );
-}
-
-// ============================================================
-// 3-player layout: top center, bottom-left, bottom-right
-// ============================================================
-function ThreePlayerLayout() {
-  const { state } = useGame();
-  const [p1, p2, p3] = state.players;
-
-  return (
-    <div className="flex flex-col h-screen max-h-screen overflow-hidden">
-      {/* Player 1 - top center (rotated) */}
-      <div className="flex justify-center pt-3 pb-2">
-        <div className="rotate-180">
-          <PlayerZone player={p1} position="top" />
-        </div>
-      </div>
-
-      {/* Context card - center */}
-      <div className="flex-1 flex items-center justify-center px-4 py-2 overflow-hidden">
-        <div className="w-full max-w-sm">
-          <ContextCardDisplay card={state.currentContextCard!} />
-        </div>
-      </div>
-
-      {/* Players 2 & 3 - bottom row */}
-      <div className="flex justify-around pb-3 pt-2 px-4">
-        <PlayerZone player={p2} position="bottom" />
-        <PlayerZone player={p3} position="bottom" />
-      </div>
-    </div>
-  );
-}
-
-// ============================================================
-// 4-player layout: top, bottom, left, right
-// ============================================================
-function FourPlayerLayout() {
-  const { state } = useGame();
-  const [p1, p2, p3, p4] = state.players;
-
-  return (
-    <div className="flex flex-col h-screen max-h-screen overflow-hidden">
-      {/* Player 1 - top */}
-      <div className="flex justify-center pt-3 pb-1">
-        <div className="rotate-180">
-          <PlayerZone player={p1} position="top" />
-        </div>
-      </div>
-
-      {/* Middle row: Player 4 | Context Card | Player 2 */}
-      <div className="flex-1 flex items-center gap-2 px-2 overflow-hidden">
-        {/* Player 4 - left (rotated 90°) */}
-        <div className="flex-shrink-0">
-          <div className="rotate-90">
-            <PlayerZone player={p4} position="left" />
-          </div>
-        </div>
-
-        {/* Context card - center */}
-        <div className="flex-1 flex items-center justify-center overflow-hidden">
-          <div className="w-full max-w-xs">
-            <ContextCardDisplay card={state.currentContextCard!} />
-          </div>
-        </div>
-
-        {/* Player 2 - right (rotated -90°) */}
-        <div className="flex-shrink-0">
-          <div className="-rotate-90">
-            <PlayerZone player={p2} position="right" />
-          </div>
-        </div>
-      </div>
-
-      {/* Player 3 - bottom */}
-      <div className="flex justify-center pb-3 pt-1">
-        <PlayerZone player={p3} position="bottom" />
-      </div>
-    </div>
-  );
-}
-
-// ============================================================
 // Top bar with game info
 // ============================================================
 function GameTopBar() {
-  const { state, resetGame, drawNewCard } = useGame();
+  const { state, resetGame } = useGame();
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-2 bg-black/30 backdrop-blur-sm border-b border-white/10">
+    <div className="flex items-center justify-between px-4 py-2 bg-black/30 backdrop-blur-sm border-b border-white/10 flex-shrink-0">
       <button
         onClick={resetGame}
-        className="text-white/50 hover:text-white text-xs flex items-center gap-1 transition-colors"
+        className="text-white/50 hover:text-white text-xs flex items-center gap-1 transition-colors px-2 py-1 rounded-lg hover:bg-white/10"
       >
         ← 返回
       </button>
@@ -146,53 +35,74 @@ function GameTopBar() {
           {state.playerCount}人 · 第{state.round}回合
         </span>
       </div>
-      <button
-        onClick={drawNewCard}
-        className="text-white/50 hover:text-yellow-400 text-xs flex items-center gap-1 transition-colors"
-      >
-        🔀 換牌
-      </button>
+      {/* Spacer to balance the back button */}
+      <div className="w-12" />
     </div>
   );
 }
 
 // ============================================================
-// Score bar — shows totalScore with progress toward 50
+// Context card area — fills the top section horizontally
+// ============================================================
+function ContextCardArea() {
+  const { state } = useGame();
+  if (!state.currentContextCard) return null;
+
+  return (
+    <div className="flex-1 flex items-center justify-center px-4 py-2 overflow-hidden min-h-0">
+      <div className="w-full h-full max-h-full">
+        <ContextCardDisplay card={state.currentContextCard} />
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// Players row — ALL players at the bottom, same direction
+// ============================================================
+function PlayersRow() {
+  const { state } = useGame();
+
+  return (
+    <div className="flex-shrink-0 flex items-end justify-around px-3 pb-2 pt-1 border-t border-white/10 bg-black/15">
+      {state.players.map((player) => (
+        <PlayerZone key={player.id} player={player} />
+      ))}
+    </div>
+  );
+}
+
+// ============================================================
+// Score bar — compact horizontal bar showing all players
 // ============================================================
 function ScoreBar() {
   const { state } = useGame();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-center gap-2 px-3 py-2 bg-black/20 backdrop-blur-sm border-t border-white/10">
+    <div className="flex-shrink-0 flex items-center justify-center gap-3 px-4 py-1.5 bg-black/20 border-t border-white/10">
       {state.players.map((p) => {
         const cfg = getPlayerConfig(p.id);
         const pct = Math.min(100, (p.totalScore / WIN_SCORE) * 100);
         return (
-          <div
-            key={p.id}
-            className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl min-w-[56px]"
-            style={{
-              backgroundColor: `${cfg.color}18`,
-              border: `1px solid ${cfg.color}40`,
-            }}
-          >
-            <div className="flex items-center gap-1">
-              <span className="text-sm">{cfg.emoji}</span>
-              <span
-                className="font-black text-sm leading-none"
-                style={{ color: cfg.color, fontFamily: "'Nunito', sans-serif" }}
-              >
-                {p.totalScore}
-              </span>
+          <div key={p.id} className="flex items-center gap-2 flex-1 max-w-[120px]">
+            <span className="text-sm flex-shrink-0">{cfg.emoji}</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-0.5">
+                <span className="text-white/60 text-[10px] truncate">{p.name}</span>
+                <span
+                  className="font-black text-xs flex-shrink-0 ml-1"
+                  style={{ color: cfg.color, fontFamily: "'Nunito', sans-serif" }}
+                >
+                  {p.totalScore}
+                </span>
+              </div>
+              <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${pct}%`, backgroundColor: cfg.color }}
+                />
+              </div>
             </div>
-            {/* Progress bar toward 50 */}
-            <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{ width: `${pct}%`, backgroundColor: cfg.color }}
-              />
-            </div>
-            <span className="text-white/30 text-[9px]">/{WIN_SCORE}</span>
           </div>
         );
       })}
@@ -201,7 +111,7 @@ function ScoreBar() {
 }
 
 // ============================================================
-// Main GameBoard
+// Main GameBoard — landscape layout
 // ============================================================
 export default function GameBoard() {
   const { state } = useGame();
@@ -217,22 +127,20 @@ export default function GameBoard() {
   }
 
   return (
-    <div className="relative min-h-screen">
+    <div className="flex flex-col h-screen max-h-screen overflow-hidden">
       {/* Top bar */}
-      <div className="pt-10">
-        {/* Player layout */}
-        {state.playerCount === 2 && <TwoPlayerLayout />}
-        {state.playerCount === 3 && <ThreePlayerLayout />}
-        {state.playerCount === 4 && <FourPlayerLayout />}
-      </div>
+      <GameTopBar />
+
+      {/* Context card — fills available space horizontally */}
+      <ContextCardArea />
 
       {/* Score bar */}
       <ScoreBar />
 
-      {/* Top bar overlay */}
-      <GameTopBar />
+      {/* Players row — all at bottom, all text same direction */}
+      <PlayersRow />
 
-      {/* Win declaration modal flow */}
+      {/* Win declaration modal */}
       {isModalOpen && <WinDeclaration />}
 
       {/* Round end summary */}

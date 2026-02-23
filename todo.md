@@ -50,3 +50,12 @@
 - [ ] 15-minute recess timer
 - [ ] Game history export
 - [ ] Teacher mode (show hints/answers)
+
+## Phase 3: Layout & Camera Fixes
+- [x] All player zones text faces same direction (no text rotation)
+- [x] Landscape orientation: game board uses horizontal layout
+- [x] Context card display area is horizontal rectangular (not vertical)
+- [x] 2-player: both players on bottom, context card fills center horizontally
+- [x] 4-player: all 4 players on bottom row, context card fills top area
+- [x] Enable direct camera capture (not just file upload) in photo step
+- [x] Camera button opens device camera directly on mobile/tablet
