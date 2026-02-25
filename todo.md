@@ -70,3 +70,10 @@
 - [x] Bright gradient background (not dark chalkboard)
 - [x] Player colors updated to vivid fun palette
 - [x] UI components use light, playful colors
+
+## Phase 5: Context Card Block Layout Fix
+- [x] Fix color legend text cut-off in 4-player mode (overflow visible)
+- [x] Change block layout: each color group in separate column set, 5 blocks per column
+- [x] Students can count using multiples of 5 (e.g. 11 red = 2 full columns + 1)
+- [x] Color groups displayed side by side with clear separator
+- [x] Block size appropriate for iPad landscape view
