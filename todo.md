@@ -77,3 +77,12 @@
 - [x] Students can count using multiples of 5 (e.g. 11 red = 2 full columns + 1)
 - [x] Color groups displayed side by side with clear separator
 - [x] Block size appropriate for iPad landscape view
+
+## Phase 6: Tutorial & Card Draw Animation
+- [x] Multi-page animated tutorial after player selection
+- [x] Tutorial pages: setup, gameplay, tactics A/B/C, winning
+- [x] Prev/Next/Skip navigation buttons in tutorial
+- [x] Slide-in/out page transition animations
+- [x] Animated context card draw sequence (flip card animation)
+- [x] Card draw shows suspense before revealing the context card
+- [x] Wire tutorial → card draw → game board flow in GameContext

@@ -22,6 +22,9 @@ import {
 type GameAction =
   | { type: 'SET_PLAYER_COUNT'; count: PlayerCount }
   | { type: 'START_GAME' }
+  | { type: 'SKIP_TUTORIAL' }
+  | { type: 'START_CARD_DRAW' }
+  | { type: 'FINISH_CARD_DRAW' }
   | { type: 'DRAW_NEW_CARD' }
   | { type: 'DECLARE_WIN'; playerId: number }
   | { type: 'CHOOSE_WIN_TYPE'; winType: WinType }
@@ -88,7 +91,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'START_GAME':
       return {
         ...state,
-        phase: 'playing',
+        phase: 'tutorial',
         players: createPlayers(state.playerCount),
         currentContextCard: drawRandomContextCard(),
         activeDeclaration: null,
@@ -98,6 +101,15 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         winnerId: null,
         lastRoundSummary: null,
       };
+
+    case 'SKIP_TUTORIAL':
+      return { ...state, phase: 'card-draw' };
+
+    case 'START_CARD_DRAW':
+      return { ...state, phase: 'card-draw' };
+
+    case 'FINISH_CARD_DRAW':
+      return { ...state, phase: 'playing' };
 
     case 'DRAW_NEW_CARD':
       return {
@@ -217,10 +229,10 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'CONFIRM_ROUND_END':
-      // Start next round: draw new card, reset round scores, keep totalScores
+      // Start next round: draw new card with animation, reset round scores, keep totalScores
       return {
         ...state,
-        phase: 'playing',
+        phase: 'card-draw',
         currentContextCard: drawRandomContextCard(),
         activeDeclaration: null,
         declaringPlayerId: null,
@@ -253,6 +265,8 @@ interface GameContextValue {
   state: GameState;
   setPlayerCount: (count: PlayerCount) => void;
   startGame: () => void;
+  skipTutorial: () => void;
+  finishCardDraw: () => void;
   drawNewCard: () => void;
   declareWin: (playerId: number) => void;
   chooseWinType: (winType: WinType) => void;
@@ -275,6 +289,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const setPlayerCount = useCallback((count: PlayerCount) =>
     dispatch({ type: 'SET_PLAYER_COUNT', count }), []);
   const startGame = useCallback(() => dispatch({ type: 'START_GAME' }), []);
+  const skipTutorial = useCallback(() => dispatch({ type: 'SKIP_TUTORIAL' }), []);
+  const finishCardDraw = useCallback(() => dispatch({ type: 'FINISH_CARD_DRAW' }), []);
   const drawNewCard = useCallback(() => dispatch({ type: 'DRAW_NEW_CARD' }), []);
   const declareWin = useCallback((playerId: number) =>
     dispatch({ type: 'DECLARE_WIN', playerId }), []);
@@ -303,6 +319,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       state,
       setPlayerCount,
       startGame,
+      skipTutorial,
+      finishCardDraw,
       drawNewCard,
       declareWin,
       chooseWinType,

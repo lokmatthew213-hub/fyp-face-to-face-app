@@ -47,6 +47,8 @@ export interface WinDeclaration {
 
 export type GamePhase =
   | 'setup'          // Player count selection
+  | 'tutorial'       // Animated tutorial pages
+  | 'card-draw'      // Animated context card draw sequence
   | 'playing'        // Main game board
   | 'win-declare'    // Player tapped their icon → choose win type
   | 'fire-photo'     // Take photo for 火力全開
