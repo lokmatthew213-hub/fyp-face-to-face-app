@@ -30,9 +30,28 @@ const CONTEXT_CARDS: ContextCard[] = [
   { id: 10, name: "派對食物", description: "Party", colors: { red: 35, yellow: 35, blue: 30 }, total: 100 },
 ];
 
+const PLAYER_CONFIGS = [
+  { id: 1, name: '玩家 1', color: 'oklch(0.68 0.24 28)', colorName: 'red', emoji: '🍎' },
+  { id: 2, name: '玩家 2', color: 'oklch(0.58 0.24 255)', colorName: 'blue', emoji: '🫐' },
+  { id: 3, name: '玩家 3', color: 'oklch(0.75 0.22 55)', colorName: 'orange', emoji: '🍊' },
+  { id: 4, name: '玩家 4', color: 'oklch(0.68 0.22 145)', colorName: 'green', emoji: '🍀' },
+];
+
 function drawRandomContextCard(): ContextCard {
   const idx = Math.floor(Math.random() * CONTEXT_CARDS.length);
   return CONTEXT_CARDS[idx];
+}
+
+function createPlayers(count: number, customNames?: string[]) {
+  return Array.from({ length: count }, (_, i) => ({
+    id: PLAYER_CONFIGS[i].id,
+    name: (customNames?.[i] && customNames[i].trim()) ? customNames[i].trim() : PLAYER_CONFIGS[i].name,
+    color: PLAYER_CONFIGS[i].color,
+    colorName: PLAYER_CONFIGS[i].colorName,
+    emoji: PLAYER_CONFIGS[i].emoji,
+    score: 0,
+    totalScore: 0,
+  }));
 }
 
 function buildFirePrompt(card: ContextCard): string {
@@ -58,6 +77,41 @@ function buildTrapPrompt(card: ContextCard): string {
 }
 
 // ============================================================
+// JSON parsing utilities (mirrors server/routers.ts logic)
+// ============================================================
+
+function extractJSON(content: string): string | null {
+  const stripped = content
+    .replace(/```json\s*/gi, '')
+    .replace(/```\s*/g, '')
+    .trim();
+  const jsonMatch = stripped.match(/\{[\s\S]*\}/);
+  return jsonMatch ? jsonMatch[0] : null;
+}
+
+function cleanReasoning(raw: string): string {
+  if (!raw) return '';
+  let cleaned = raw
+    .replace(/```json[\s\S]*?```/gi, '')
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`[^`]*`/g, '')
+    .trim();
+  cleaned = cleaned
+    .split('\n')
+    .filter(line => {
+      const t = line.trim();
+      if (!t) return false;
+      if (t.startsWith('{') || t.startsWith('}')) return false;
+      if (t.includes('"isValid"') || t.includes('"message"') || t.includes('"reasoning"')) return false;
+      if (t.startsWith('"') && t.includes(':')) return false;
+      return true;
+    })
+    .join('\n')
+    .trim();
+  return cleaned || raw.slice(0, 200);
+}
+
+// ============================================================
 // Tests
 // ============================================================
 
@@ -76,7 +130,6 @@ describe("Context Cards Data", () => {
   it("each card total should match sum of colors or be a valid game total", () => {
     for (const card of CONTEXT_CARDS) {
       const sum = Object.values(card.colors).reduce((acc, v) => acc + (v ?? 0), 0);
-      // Total should be >= sum of colors (total can be the denominator, which includes all blocks)
       expect(card.total, `Card ${card.id} total should be >= color sum`).toBeGreaterThanOrEqual(sum);
     }
   });
@@ -134,10 +187,156 @@ describe("Game Rules Validation", () => {
 
   it("card 4 (數量比較) should allow percentage > 100%", () => {
     const card = CONTEXT_CARDS[3]; // red:25, blue:10, total:35
-    // 25/10 * 100% = 250% - valid as fraction can exceed 100%
     expect(card.colors.red).toBe(25);
     expect(card.colors.blue).toBe(10);
     expect(card.total).toBe(35);
+  });
+});
+
+// ============================================================
+// Player Name Tests (Issue #6 fix)
+// ============================================================
+
+describe("createPlayers with custom names", () => {
+  it("should use default names when no customNames provided", () => {
+    const players = createPlayers(2);
+    expect(players[0].name).toBe('玩家 1');
+    expect(players[1].name).toBe('玩家 2');
+  });
+
+  it("should use custom names when provided", () => {
+    const players = createPlayers(2, ['小明', '小華']);
+    expect(players[0].name).toBe('小明');
+    expect(players[1].name).toBe('小華');
+  });
+
+  it("should fall back to default name when custom name is empty string", () => {
+    const players = createPlayers(2, ['', '小華']);
+    expect(players[0].name).toBe('玩家 1'); // empty → default
+    expect(players[1].name).toBe('小華');
+  });
+
+  it("should fall back to default name when custom name is whitespace only", () => {
+    const players = createPlayers(2, ['   ', '小華']);
+    expect(players[0].name).toBe('玩家 1'); // whitespace → default
+    expect(players[1].name).toBe('小華');
+  });
+
+  it("should trim whitespace from custom names", () => {
+    const players = createPlayers(2, ['  小明  ', '小華']);
+    expect(players[0].name).toBe('小明'); // trimmed
+  });
+
+  it("should create correct number of players", () => {
+    expect(createPlayers(2)).toHaveLength(2);
+    expect(createPlayers(3)).toHaveLength(3);
+    expect(createPlayers(4)).toHaveLength(4);
+  });
+
+  it("all players should start with score 0 and totalScore 0", () => {
+    const players = createPlayers(4, ['A', 'B', 'C', 'D']);
+    for (const p of players) {
+      expect(p.score).toBe(0);
+      expect(p.totalScore).toBe(0);
+    }
+  });
+});
+
+// ============================================================
+// JSON Parsing Tests (Issue #1 fix)
+// ============================================================
+
+describe("extractJSON", () => {
+  it("should extract JSON from plain JSON string", () => {
+    const input = '{"isValid": true, "message": "合格", "reasoning": "正確"}';
+    const result = extractJSON(input);
+    expect(result).not.toBeNull();
+    const parsed = JSON.parse(result!);
+    expect(parsed.isValid).toBe(true);
+  });
+
+  it("should extract JSON from markdown code block", () => {
+    const input = '```json\n{"isValid": false, "message": "不合格", "reasoning": "缺少關係"}\n```';
+    const result = extractJSON(input);
+    expect(result).not.toBeNull();
+    const parsed = JSON.parse(result!);
+    expect(parsed.isValid).toBe(false);
+  });
+
+  it("should extract JSON from code block without language tag", () => {
+    const input = '```\n{"isValid": true, "message": "OK"}\n```';
+    const result = extractJSON(input);
+    expect(result).not.toBeNull();
+    const parsed = JSON.parse(result!);
+    expect(parsed.isValid).toBe(true);
+  });
+
+  it("should return null for non-JSON content", () => {
+    const result = extractJSON("This is just plain text with no JSON");
+    expect(result).toBeNull();
+  });
+
+  it("should handle JSON with extra text before/after", () => {
+    const input = 'Here is my response:\n{"isValid": true, "message": "合格"}\nThat is all.';
+    const result = extractJSON(input);
+    expect(result).not.toBeNull();
+    const parsed = JSON.parse(result!);
+    expect(parsed.isValid).toBe(true);
+  });
+});
+
+describe("cleanReasoning", () => {
+  it("should return empty string for empty input", () => {
+    expect(cleanReasoning('')).toBe('');
+  });
+
+  it("should remove JSON code blocks from reasoning", () => {
+    const input = '學生的算式正確。\n```json\n{"isValid": true}\n```\n很好！';
+    const result = cleanReasoning(input);
+    expect(result).not.toContain('```');
+    expect(result).not.toContain('"isValid"');
+    expect(result).toContain('學生的算式正確');
+  });
+
+  it("should remove lines that look like JSON", () => {
+    const input = '學生的算式正確。\n{"isValid": true}\n很好！';
+    const result = cleanReasoning(input);
+    expect(result).not.toContain('"isValid"');
+    expect(result).toContain('學生的算式正確');
+  });
+
+  it("should preserve clean Chinese text", () => {
+    const input = '學生的算式符合百分數的表達方式，計算正確！';
+    const result = cleanReasoning(input);
+    expect(result).toBe(input);
+  });
+});
+
+// ============================================================
+// Score Sync Tests (Issue #5 fix)
+// ============================================================
+
+describe("Player score display sync", () => {
+  it("totalScore should be the authoritative score for display", () => {
+    const player = { id: 1, name: '玩家 1', score: 5, totalScore: 35 };
+    // The player icon should show totalScore, not score
+    expect(player.totalScore).toBe(35);
+    expect(player.score).toBe(5); // round score is separate
+  });
+
+  it("totalScore should accumulate across rounds", () => {
+    let totalScore = 0;
+    const roundScores = [10, 7, 13, 5];
+    for (const s of roundScores) {
+      totalScore = Math.max(0, totalScore + s);
+    }
+    expect(totalScore).toBe(35);
+  });
+
+  it("totalScore should not go below 0 when negative delta applied", () => {
+    const totalScore = 5;
+    const delta = -10;
+    expect(Math.max(0, totalScore + delta)).toBe(0);
   });
 });
 

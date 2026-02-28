@@ -1,6 +1,7 @@
 // ============================================================
 // 百分戰局 — Setup Screen (Candy Pop Design)
 // Bright, cheerful colors for primary school students
+// Includes player name input fields (optional, defaults to "玩家 N")
 // ============================================================
 
 import { useState } from 'react';
@@ -64,16 +65,24 @@ function PlayerDot({ config, label }: { config: typeof PLAYER_CONFIGS[0]; label:
 }
 
 export default function SetupScreen() {
-  const { state, setPlayerCount, startGame } = useGame();
+  const { state, setPlayerCount, setPlayerNames, startGame } = useGame();
   const [selected, setSelected] = useState<PlayerCount>(2);
+  const [names, setNames] = useState<string[]>(['', '', '', '']);
 
   const handleSelect = (count: PlayerCount) => {
     setSelected(count);
     setPlayerCount(count);
   };
 
+  const handleNameChange = (idx: number, value: string) => {
+    const updated = [...names];
+    updated[idx] = value;
+    setNames(updated);
+  };
+
   const handleStart = () => {
     setPlayerCount(selected);
+    setPlayerNames(names.slice(0, selected));
     startGame();
   };
 
@@ -184,23 +193,51 @@ export default function SetupScreen() {
           </p>
         </div>
 
-        {/* Player colors preview */}
-        <div className="flex justify-center gap-4 mb-6">
-          {PLAYER_CONFIGS.slice(0, selected).map((cfg) => (
-            <div key={cfg.id} className="flex flex-col items-center gap-1">
-              <div
-                className="w-12 h-12 rounded-2xl border-2 flex items-center justify-center text-xl shadow-md"
-                style={{
-                  borderColor: cfg.color,
-                  backgroundColor: `${cfg.color}18`,
-                  boxShadow: `0 4px 12px ${cfg.color}30`,
-                }}
-              >
-                {cfg.emoji}
+        {/* Player name inputs */}
+        <div className="mb-5">
+          <p
+            className="text-slate-600 text-sm font-bold mb-3 text-center"
+            style={{ fontFamily: "'Noto Sans TC', sans-serif" }}
+          >
+            ✏️ 輸入玩家名字（可選，留空則用預設名字）
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {PLAYER_CONFIGS.slice(0, selected).map((cfg, idx) => (
+              <div key={cfg.id} className="flex items-center gap-2">
+                <div
+                  className="w-9 h-9 rounded-xl border-2 flex items-center justify-center text-lg flex-shrink-0"
+                  style={{
+                    borderColor: cfg.color,
+                    backgroundColor: `${cfg.color}18`,
+                  }}
+                >
+                  {cfg.emoji}
+                </div>
+                <input
+                  type="text"
+                  value={names[idx]}
+                  onChange={(e) => handleNameChange(idx, e.target.value)}
+                  placeholder={cfg.name}
+                  maxLength={8}
+                  className="flex-1 min-w-0 rounded-xl border-2 px-3 py-2 text-sm font-semibold outline-none transition-all"
+                  style={{
+                    borderColor: names[idx].trim() ? cfg.color : 'oklch(0.88 0.04 220)',
+                    backgroundColor: names[idx].trim() ? `${cfg.color}08` : 'oklch(0.98 0.02 220)',
+                    color: 'oklch(0.30 0.05 220)',
+                    fontFamily: "'Noto Sans TC', sans-serif",
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = cfg.color;
+                    e.currentTarget.style.boxShadow = `0 0 0 3px ${cfg.color}20`;
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = names[idx].trim() ? cfg.color : 'oklch(0.88 0.04 220)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                />
               </div>
-              <span className="text-xs text-slate-500 font-semibold">{cfg.name}</span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* Start button */}

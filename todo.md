@@ -86,3 +86,11 @@
 - [x] Animated context card draw sequence (flip card animation)
 - [x] Card draw shows suspense before revealing the context card
 - [x] Wire tutorial → card draw → game board flow in GameContext
+
+## Phase 7: Bug Fixes (Feb 28)
+- [x] Fix AI response: parse JSON and show only friendly message (no raw JSON code)
+- [x] Refine AI prompt: accept both 算式 form (A/B×100%) and final answer form (X%)
+- [x] Show explanation when AI says correct (not just "pass")
+- [x] Add +/- zoom buttons in context card area for device scaling
+- [x] Fix player zone score sync: show totalScore not round score
+- [x] Add player name input fields in setup screen

@@ -21,6 +21,7 @@ import {
 
 type GameAction =
   | { type: 'SET_PLAYER_COUNT'; count: PlayerCount }
+  | { type: 'SET_PLAYER_NAMES'; names: string[] }
   | { type: 'START_GAME' }
   | { type: 'SKIP_TUTORIAL' }
   | { type: 'START_CARD_DRAW' }
@@ -49,6 +50,7 @@ const initialState: GameState = {
   scoreLog: [],
   winnerId: null,
   lastRoundSummary: null,
+  pendingPlayerNames: [],
 };
 
 function applyScoreChanges(
@@ -88,11 +90,14 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'SET_PLAYER_COUNT':
       return { ...state, playerCount: action.count };
 
+    case 'SET_PLAYER_NAMES':
+      return { ...state, pendingPlayerNames: action.names };
+
     case 'START_GAME':
       return {
         ...state,
         phase: 'tutorial',
-        players: createPlayers(state.playerCount),
+        players: createPlayers(state.playerCount, state.pendingPlayerNames),
         currentContextCard: drawRandomContextCard(),
         activeDeclaration: null,
         declaringPlayerId: null,
@@ -264,6 +269,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 interface GameContextValue {
   state: GameState;
   setPlayerCount: (count: PlayerCount) => void;
+  setPlayerNames: (names: string[]) => void;
   startGame: () => void;
   skipTutorial: () => void;
   finishCardDraw: () => void;
@@ -288,6 +294,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const setPlayerCount = useCallback((count: PlayerCount) =>
     dispatch({ type: 'SET_PLAYER_COUNT', count }), []);
+  const setPlayerNames = useCallback((names: string[]) =>
+    dispatch({ type: 'SET_PLAYER_NAMES', names }), []);
   const startGame = useCallback(() => dispatch({ type: 'START_GAME' }), []);
   const skipTutorial = useCallback(() => dispatch({ type: 'SKIP_TUTORIAL' }), []);
   const finishCardDraw = useCallback(() => dispatch({ type: 'FINISH_CARD_DRAW' }), []);
@@ -318,6 +326,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     <GameContext.Provider value={{
       state,
       setPlayerCount,
+      setPlayerNames,
       startGame,
       skipTutorial,
       finishCardDraw,

@@ -126,7 +126,7 @@ function PlayerButton({ player }: { player: Player }) {
           border: `1px solid ${cfg.color}40`,
         }}
       >
-        {player.score}分
+        {player.totalScore}分
       </div>
     </div>
   );

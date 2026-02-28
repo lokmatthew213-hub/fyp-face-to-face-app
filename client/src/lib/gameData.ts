@@ -78,6 +78,7 @@ export interface GameState {
   round: number;
   scoreLog: ScoreEvent[];
   winnerId: number | null;
+  pendingPlayerNames: string[];
   lastRoundSummary: RoundSummary | null;
 }
 
@@ -227,10 +228,10 @@ export function drawRandomContextCard(): ContextCard {
   return CONTEXT_CARDS[idx];
 }
 
-export function createPlayers(count: PlayerCount): Player[] {
+export function createPlayers(count: PlayerCount, customNames?: string[]): Player[] {
   return Array.from({ length: count }, (_, i) => ({
     id: PLAYER_CONFIGS[i].id,
-    name: PLAYER_CONFIGS[i].name,
+    name: (customNames?.[i] && customNames[i].trim()) ? customNames[i].trim() : PLAYER_CONFIGS[i].name,
     color: PLAYER_CONFIGS[i].color,
     colorName: PLAYER_CONFIGS[i].colorName,
     emoji: PLAYER_CONFIGS[i].emoji,
@@ -323,37 +324,42 @@ export function buildFirePrompt(contextCard: ContextCard): string {
     })
     .join('，');
 
-  return `你是一個小學數學老師助手，正在判斷學生的百分數卡牌遊戲答案是否正確。
+  return `你是一個小學數學老師助手，正在判斷學生的百分數卡牌遊戲答案是否正確。請用中文回答。
 
 【情境地圖】
 ${colorDesc}，總共${contextCard.total}格。
 
 【判斷標準】
-學生需要用手中的卡牌拼出一條完整的百分數算式。正確的算式必須：
-1. 包含顏色詞（例如：紅色、藍色、黃色）
-2. 包含數字（用多張數字牌拼出，例如用「2」和「5」拼出25）
-3. 包含完整的數學概念：A/B × 100%，其中A和B都是具體的顏色數量或總數
-4. 算式必須表達兩個物件之間的關係（例如：紅色佔全部的百分之幾，或紅色是藍色的百分之幾）
-5. 數學計算必須正確
-6. 不能只說「紅色是75%」，因為沒有表達兩個物件的關係
+學生需要用手中的卡牌拼出一條完整的百分數算式。以下兩種形式都算合格：
 
-【不合格例子】
-- 「紅色是75%」❌ （沒有表達關係）
-- 只有數字沒有顏色詞 ❌
-- 算式計算錯誤 ❌
+✅ 形式一（算式形式）：A/B × 100%
+例如：「紅色佔全部的 20/100 × 100%」
+例如：「紅色是藍色的 25/10 × 100%」
+例如：「紅色加黃色佔全部的 25/100 × 100%」
 
-【合格例子】
-- 「紅色佔全部的20/100×100%」✅
-- 「紅色是藍色的25/10×100%」✅
-- 「紅色加黃色佔全部的25/100×100%」✅（心算加法）
+✅ 形式二（答案形式）：直接寫出百分比答案，但必須標明關係
+例如：「紅色佔全部的 20%」（必須有兩個物件的關係）
+例如：「紅色是藍色的 250%」
 
-請看圖片中學生排列的卡牌，判斷是否構成一條合格的完整算式。
+❌ 不合格的情況：
+- 只說「紅色是 75%」而沒有說明是「佔什麼的」75% ❌
+- 完全沒有顏色詞 ❌
+- 數字計算明顯錯誤（例如 20/100 說成 30%）❌
+- 沒有任何數字 ❌
 
-請以JSON格式回答：
+重要提示：
+- 小學生用卡牌拼出算式，卡牌可能是橫排的，請靈活判斷
+- 如果學生寫了 A/B × 100% 的形式，即使沒有最終答案也算合格
+- 如果學生寫了最終百分比答案並標明了兩個物件的關係，也算合格
+- 數字必須與情境地圖相符
+
+請看圖片中學生排列的卡牌，判斷是否構成一條合格的算式。
+
+請只用純JSON格式回答（不要加markdown代碼塊）：
 {
-  "isValid": true/false,
-  "message": "簡短的中文判斷結果（一句話）",
-  "reasoning": "詳細解釋為什麼合格或不合格（中文，2-3句）"
+  "isValid": true或false,
+  "message": "簡短的中文判斷結果（一句話，例如：你的算式正確！或：算式缺少兩個物件的關係）",
+  "reasoning": "用友好的中文向小學生解釋為什麼合格或不合格（2-3句，不要包含JSON或程式碼）"
 }`;
 }
 
@@ -367,7 +373,7 @@ export function buildTrapPrompt(contextCard: ContextCard): string {
     })
     .join('，');
 
-  return `你是一個小學數學老師助手，正在判斷學生的百分數卡牌遊戲中的「問題」是否有效。
+  return `你是一個小學數學老師助手，正在判斷學生的百分數卡牌遊戲中的「問題」是否有效。請用中文回答。
 
 【情境地圖】
 ${colorDesc}，總共${contextCard.total}格。
@@ -382,10 +388,10 @@ ${colorDesc}，總共${contextCard.total}格。
 
 請看圖片中學生排列的卡牌，判斷是否構成一條有效的問題。
 
-請以JSON格式回答：
+請只用純JSON格式回答（不要加markdown代碼塊）：
 {
-  "isValid": true/false,
+  "isValid": true或false,
   "message": "簡短的中文判斷結果（一句話）",
-  "reasoning": "詳細解釋為什麼有效或無效（中文，2-3句）"
+  "reasoning": "用友好的中文向小學生解釋為什麼有效或無效（2-3句，不要包含JSON或程式碼）"
 }`;
 }

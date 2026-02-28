@@ -2,7 +2,7 @@
 // 百分戰局 — Context Card Display (Candy Pop Design, Landscape)
 // LAYOUT: Each color group shown separately, 5 blocks per column
 // Students count using multiples of 5 (e.g. 11 red = 2 cols + 1)
-// Block size auto-fits to available width on iPad landscape
+// Block size adjustable via +/- buttons for different devices
 // ============================================================
 
 import { useEffect, useState } from 'react';
@@ -47,9 +47,9 @@ const COLOR_CONFIG = {
 // ============================================================
 // ColorBlockGrid — main block rendering component
 // Each color group is shown as columns of 5 blocks
-// Block size auto-calculated to fit iPad landscape 4-player mode
+// blockSize is passed in from parent (adjustable via +/- buttons)
 // ============================================================
-function ColorBlockGrid({ card }: { card: ContextCard }) {
+function ColorBlockGrid({ card, blockSize }: { card: ContextCard; blockSize: number }) {
   const [revealed, setRevealed] = useState(false);
 
   useEffect(() => {
@@ -65,21 +65,6 @@ function ColorBlockGrid({ card }: { card: ContextCard }) {
   const presentColors = (['red', 'yellow', 'blue'] as const).filter(
     (c) => (card.colors[c] ?? 0) > 0
   );
-
-  // Total columns needed across all groups
-  const totalColsNeeded = presentColors.reduce((sum, c) => {
-    const cnt = card.colors[c] ?? 0;
-    return sum + Math.ceil(cnt / ROWS_PER_COL);
-  }, 0);
-
-  // Auto-fit block size to available width
-  // iPad landscape in 4-player mode: context area ≈ 680px wide
-  const availableWidth = 680;
-  const numGroups = presentColors.length;
-  const totalGaps = GAP * (totalColsNeeded - numGroups) + GROUP_GAP * (numGroups - 1);
-  const autoSize = Math.floor((availableWidth - totalGaps) / totalColsNeeded);
-  // Clamp: minimum 16px (readable), maximum 36px (not too large)
-  const blockSize = Math.max(16, Math.min(36, autoSize));
 
   // Cumulative animation offset for staggered reveal
   let animOffset = 0;
@@ -112,7 +97,7 @@ function ColorBlockGrid({ card }: { card: ContextCard }) {
                   borderColor: cfg.headerBorder,
                   color: cfg.labelColor,
                   fontFamily: "'Noto Sans TC', sans-serif",
-                  fontSize: `${Math.max(11, Math.min(14, blockSize * 0.45))}px`,
+                  fontSize: `${Math.max(11, Math.min(15, blockSize * 0.5))}px`,
                   padding: '3px 10px',
                   whiteSpace: 'nowrap',
                   lineHeight: '1.4',
@@ -186,11 +171,46 @@ function ColorBlockGrid({ card }: { card: ContextCard }) {
 }
 
 // ============================================================
+// Zoom control button
+// ============================================================
+function ZoomBtn({
+  label,
+  onClick,
+  disabled,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="w-8 h-8 rounded-full font-black text-lg flex items-center justify-center transition-all select-none"
+      style={{
+        background: disabled ? 'oklch(0.93 0.02 220)' : 'oklch(0.96 0.06 220)',
+        border: '2px solid oklch(0.82 0.10 220)',
+        color: disabled ? 'oklch(0.75 0.05 220)' : 'oklch(0.45 0.15 220)',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        lineHeight: 1,
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
+// ============================================================
 // Main ContextCardDisplay — landscape optimized
 // ============================================================
+const BLOCK_SIZE_MIN = 14;
+const BLOCK_SIZE_MAX = 48;
+const BLOCK_SIZE_STEP = 4;
+
 export default function ContextCardDisplay({ card, compact = false }: ContextCardDisplayProps) {
   const { drawNewCard } = useGame();
   const [isFlipping, setIsFlipping] = useState(false);
+  const [blockSize, setBlockSize] = useState(26); // default size
 
   const handleNewCard = () => {
     setIsFlipping(true);
@@ -199,6 +219,9 @@ export default function ContextCardDisplay({ card, compact = false }: ContextCar
       setIsFlipping(false);
     }, 300);
   };
+
+  const zoomIn = () => setBlockSize(s => Math.min(BLOCK_SIZE_MAX, s + BLOCK_SIZE_STEP));
+  const zoomOut = () => setBlockSize(s => Math.max(BLOCK_SIZE_MIN, s - BLOCK_SIZE_STEP));
 
   if (compact) {
     return (
@@ -212,7 +235,7 @@ export default function ContextCardDisplay({ card, compact = false }: ContextCar
             {card.name}
           </span>
         </div>
-        <ColorBlockGrid card={card} />
+        <ColorBlockGrid card={card} blockSize={blockSize} />
       </div>
     );
   }
@@ -240,17 +263,34 @@ export default function ContextCardDisplay({ card, compact = false }: ContextCar
             </p>
           </div>
         </div>
-        <button
-          onClick={handleNewCard}
-          className="chalk-btn text-xs px-3 py-1.5 flex items-center gap-1 flex-shrink-0 border font-semibold transition-all hover:scale-105"
-          style={{
-            background: 'oklch(0.97 0.04 220)',
-            borderColor: 'oklch(0.82 0.10 220)',
-            color: 'oklch(0.50 0.12 220)',
-          }}
-        >
-          🔀 換牌
-        </button>
+
+        {/* Right side: zoom controls + change card button */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Zoom controls */}
+          <div className="flex items-center gap-1">
+            <ZoomBtn label="−" onClick={zoomOut} disabled={blockSize <= BLOCK_SIZE_MIN} />
+            <span
+              className="text-xs font-semibold w-8 text-center"
+              style={{ color: 'oklch(0.55 0.10 220)' }}
+            >
+              {blockSize}
+            </span>
+            <ZoomBtn label="+" onClick={zoomIn} disabled={blockSize >= BLOCK_SIZE_MAX} />
+          </div>
+
+          {/* Change card button */}
+          <button
+            onClick={handleNewCard}
+            className="chalk-btn text-xs px-3 py-1.5 flex items-center gap-1 border font-semibold transition-all hover:scale-105"
+            style={{
+              background: 'oklch(0.97 0.04 220)',
+              borderColor: 'oklch(0.82 0.10 220)',
+              color: 'oklch(0.50 0.12 220)',
+            }}
+          >
+            🔀 換牌
+          </button>
+        </div>
       </div>
 
       {/* Divider */}
@@ -258,7 +298,7 @@ export default function ContextCardDisplay({ card, compact = false }: ContextCar
 
       {/* Block grid — fills remaining space */}
       <div className="flex-1 flex items-center justify-center overflow-hidden min-h-0">
-        <ColorBlockGrid card={card} />
+        <ColorBlockGrid card={card} blockSize={blockSize} />
       </div>
 
       {/* Note */}
