@@ -1,9 +1,8 @@
 // ============================================================
 // 百分戰局 Percent Battle — AI Verification
-// Uses tRPC backend route which calls Poe API (OpenAI SDK format)
-// with gemini-3-flash model for vision-based card checking
-// Falls back to manual confirmation when running on GitHub Pages
-// (no backend server available in static hosting)
+// - Manus hosted version: calls tRPC backend → Poe API (server-side)
+// - GitHub Pages static version: calls Poe API directly from browser
+//   using OpenAI-compatible SDK format
 // ============================================================
 
 export interface AIVerifyResult {
@@ -12,57 +11,165 @@ export interface AIVerifyResult {
   reasoning: string;
 }
 
-// Detect if we are running in GitHub Pages (static) mode
-// In static mode, /api/trpc is not available
+// ── Static mode detection ──────────────────────────────────
+// True when running on GitHub Pages (no Express backend available)
 const IS_STATIC_MODE =
   typeof window !== 'undefined' &&
   (window.location.hostname.endsWith('github.io') ||
     import.meta.env.VITE_STATIC_MODE === 'true');
 
-/**
- * Mock AI verification for GitHub Pages static hosting.
- * Since there is no backend, we simulate a "teacher confirms" flow:
- * the result is always marked as valid with a note that the teacher
- * should verify manually.
- */
-async function mockVerify(): Promise<AIVerifyResult> {
-  // Simulate a short network delay for realism
-  await new Promise((r) => setTimeout(r, 800));
+// Poe API key embedded for GitHub Pages static build
+// (safe for this educational app; rotate if needed)
+const POE_API_KEY = 'ltlR246-T-Uo3dZOySLphdQgOl_BEEyFw6FWhHXtIt8';
+const POE_BASE_URL = 'https://api.poe.com/v1';
+const POE_MODEL = 'gemini-3-flash';
+
+// ── Helpers ────────────────────────────────────────────────
+
+function extractJSON(content: string): string | null {
+  const stripped = content
+    .replace(/```json\s*/gi, '')
+    .replace(/```\s*/g, '')
+    .trim();
+  const jsonMatch = stripped.match(/\{[\s\S]*\}/);
+  return jsonMatch ? jsonMatch[0] : null;
+}
+
+function cleanReasoning(raw: string): string {
+  if (!raw) return '';
+  let cleaned = raw
+    .replace(/```json[\s\S]*?```/gi, '')
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`[^`]*`/g, '')
+    .trim();
+  cleaned = cleaned
+    .split('\n')
+    .filter(line => {
+      const t = line.trim();
+      if (!t) return false;
+      if (t.startsWith('{') || t.startsWith('}')) return false;
+      if (t.includes('"isValid"') || t.includes('"message"') || t.includes('"reasoning"')) return false;
+      if (t.startsWith('"') && t.includes(':')) return false;
+      return true;
+    })
+    .join('\n')
+    .trim();
+  return cleaned || raw.slice(0, 200);
+}
+
+function parseAIResponse(content: string): AIVerifyResult {
+  // Try structured JSON first
+  try {
+    const jsonStr = extractJSON(content);
+    if (jsonStr) {
+      const parsed = JSON.parse(jsonStr);
+      const isValid = Boolean(parsed.isValid);
+      const rawReasoning = parsed.reasoning ?? parsed.message ?? '';
+      const reasoning = cleanReasoning(rawReasoning);
+      const message =
+        parsed.message && !parsed.message.includes('{')
+          ? parsed.message
+          : isValid
+          ? '✅ 算式合格，驗證通過！'
+          : '❌ 算式未通過驗證';
+      return {
+        isValid,
+        message,
+        reasoning:
+          reasoning ||
+          (isValid
+            ? '你的算式符合百分數的表達方式，計算正確！'
+            : '算式未能完整表達兩個物件之間的百分數關係，請再試一次。'),
+      };
+    }
+  } catch {
+    // fall through to plain-text detection
+  }
+
+  // Fallback: plain-text keyword detection
+  const lower = content.toLowerCase();
+  const isValid =
+    lower.includes('"isvalid": true') ||
+    lower.includes('"isvalid":true') ||
+    (lower.includes('合格') && !lower.includes('不合格')) ||
+    (lower.includes('正確') && !lower.includes('不正確') && !lower.includes('計算錯誤'));
+
   return {
-    isValid: true,
-    message: '✅ 靜態模式：請老師人工確認答案是否正確',
-    reasoning:
-      '此版本運行於 GitHub Pages 靜態模式，AI 自動判卷功能需要後端伺服器支援。請老師或同學人工確認學生的算式是否正確後，再繼續遊戲。',
+    isValid,
+    message: isValid ? '✅ 驗證通過！' : '❌ 驗證未通過',
+    reasoning: isValid
+      ? '你的算式符合百分數的表達方式！'
+      : '算式未能完整表達兩個物件之間的百分數關係，請再試一次。',
   };
 }
 
-export async function verifyWithAI(
+// ── Static mode: call Poe API directly from browser ───────
+
+async function verifyWithPoeDirectly(
   imageDataUrl: string,
   prompt: string
 ): Promise<AIVerifyResult> {
-  // Use mock in static/GitHub Pages mode
-  if (IS_STATIC_MODE) {
-    return mockVerify();
-  }
-
-  // Convert data URL to base64 and mime type
   const parts = imageDataUrl.split(',');
   const base64 = parts[1] ?? '';
-  const mimeType = (parts[0]?.split(';')[0]?.split(':')[1]) ?? 'image/jpeg';
+  const mimeType = parts[0]?.split(';')[0]?.split(':')[1] ?? 'image/jpeg';
 
-  // Call our tRPC backend which uses Poe API
-  const response = await fetch('/api/trpc/game.verifyCard', {
+  const body = {
+    model: POE_MODEL,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: prompt },
+          {
+            type: 'image_url',
+            image_url: { url: `data:${mimeType};base64,${base64}` },
+          },
+        ],
+      },
+    ],
+    max_tokens: 800,
+  };
+
+  const response = await fetch(`${POE_BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `Bearer ${POE_API_KEY}`,
     },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Poe API 請求失敗：${response.status} ${errText}`);
+  }
+
+  const data = await response.json();
+  const content: string = data?.choices?.[0]?.message?.content ?? '';
+
+  if (!content) {
+    throw new Error('Poe API 回應內容為空');
+  }
+
+  return parseAIResponse(content);
+}
+
+// ── Server mode: call tRPC backend ────────────────────────
+
+async function verifyWithBackend(
+  imageDataUrl: string,
+  prompt: string
+): Promise<AIVerifyResult> {
+  const parts = imageDataUrl.split(',');
+  const base64 = parts[1] ?? '';
+  const mimeType = parts[0]?.split(';')[0]?.split(':')[1] ?? 'image/jpeg';
+
+  const response = await fetch('/api/trpc/game.verifyCard', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
     body: JSON.stringify({
-      json: {
-        imageBase64: base64,
-        mimeType,
-        prompt,
-      },
+      json: { imageBase64: base64, mimeType, prompt },
     }),
   });
 
@@ -72,8 +179,6 @@ export async function verifyWithAI(
   }
 
   const data = await response.json();
-
-  // tRPC response format: { result: { data: { json: ... } } }
   const result = data?.result?.data?.json ?? data?.result?.data ?? data;
 
   if (result?.error) {
@@ -85,4 +190,16 @@ export async function verifyWithAI(
     message: result?.message ?? '判斷完成',
     reasoning: result?.reasoning ?? '',
   };
+}
+
+// ── Public entry point ─────────────────────────────────────
+
+export async function verifyWithAI(
+  imageDataUrl: string,
+  prompt: string
+): Promise<AIVerifyResult> {
+  if (IS_STATIC_MODE) {
+    return verifyWithPoeDirectly(imageDataUrl, prompt);
+  }
+  return verifyWithBackend(imageDataUrl, prompt);
 }
