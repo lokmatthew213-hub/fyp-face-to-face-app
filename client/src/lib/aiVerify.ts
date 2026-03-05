@@ -1,8 +1,8 @@
 // ============================================================
 // 百分戰局 Percent Battle — AI Verification
-// - Manus hosted version: calls tRPC backend → Poe API (server-side)
-// - GitHub Pages static version: calls Poe API directly from browser
-//   using OpenAI-compatible SDK format
+// - GitHub Pages / static mode: calls Poe API directly from browser
+//   (Poe API supports access-control-allow-origin: *, CORS is fine)
+// - Manus hosted mode: calls tRPC backend → Poe API (server-side)
 // ============================================================
 
 export interface AIVerifyResult {
@@ -11,20 +11,18 @@ export interface AIVerifyResult {
   reasoning: string;
 }
 
-// ── Static mode detection ──────────────────────────────────
-// True when running on GitHub Pages (no Express backend available)
+// ── Config ─────────────────────────────────────────────────
+const POE_API_KEY = 'ltlR246-T-Uo3dZOySLphdQgOl_BEEyFw6FWhHXtIt8';
+const POE_BASE_URL = 'https://api.poe.com/v1';
+const POE_MODEL = 'gemini-3-flash';
+
+// Detect GitHub Pages (static) mode — no Express backend available
 const IS_STATIC_MODE =
   typeof window !== 'undefined' &&
   (window.location.hostname.endsWith('github.io') ||
     import.meta.env.VITE_STATIC_MODE === 'true');
 
-// Poe API key embedded for GitHub Pages static build
-// (safe for this educational app; rotate if needed)
-const POE_API_KEY = 'ltlR246-T-Uo3dZOySLphdQgOl_BEEyFw6FWhHXtIt8';
-const POE_BASE_URL = 'https://api.poe.com/v1';
-const POE_MODEL = 'gemini-3-flash';
-
-// ── Helpers ────────────────────────────────────────────────
+// ── Response parsing helpers ───────────────────────────────
 
 function extractJSON(content: string): string | null {
   const stripped = content
@@ -57,8 +55,7 @@ function cleanReasoning(raw: string): string {
   return cleaned || raw.slice(0, 200);
 }
 
-function parseAIResponse(content: string): AIVerifyResult {
-  // Try structured JSON first
+function parseAIContent(content: string): AIVerifyResult {
   try {
     const jsonStr = extractJSON(content);
     if (jsonStr) {
@@ -83,17 +80,15 @@ function parseAIResponse(content: string): AIVerifyResult {
       };
     }
   } catch {
-    // fall through to plain-text detection
+    // fall through
   }
-
-  // Fallback: plain-text keyword detection
+  // Plain-text fallback
   const lower = content.toLowerCase();
   const isValid =
     lower.includes('"isvalid": true') ||
     lower.includes('"isvalid":true') ||
     (lower.includes('合格') && !lower.includes('不合格')) ||
     (lower.includes('正確') && !lower.includes('不正確') && !lower.includes('計算錯誤'));
-
   return {
     isValid,
     message: isValid ? '✅ 驗證通過！' : '❌ 驗證未通過',
@@ -104,6 +99,11 @@ function parseAIResponse(content: string): AIVerifyResult {
 }
 
 // ── Static mode: call Poe API directly from browser ───────
+// Mirrors the Python example exactly:
+//   client = openai.OpenAI(api_key=..., base_url="https://api.poe.com/v1")
+//   chat = client.chat.completions.create(model="gemini-3-flash", messages=[...])
+//
+// Poe API sets access-control-allow-origin: * so CORS is fully supported.
 
 async function verifyWithPoeDirectly(
   imageDataUrl: string,
@@ -113,30 +113,34 @@ async function verifyWithPoeDirectly(
   const base64 = parts[1] ?? '';
   const mimeType = parts[0]?.split(';')[0]?.split(':')[1] ?? 'image/jpeg';
 
-  const body = {
-    model: POE_MODEL,
-    messages: [
-      {
-        role: 'user',
-        content: [
-          { type: 'text', text: prompt },
-          {
-            type: 'image_url',
-            image_url: { url: `data:${mimeType};base64,${base64}` },
-          },
-        ],
-      },
-    ],
-    max_tokens: 800,
-  };
-
+  // Equivalent to: client.chat.completions.create(model=..., messages=[...])
   const response = await fetch(`${POE_BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${POE_API_KEY}`,
+      'Authorization': `Bearer ${POE_API_KEY}`,
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      model: POE_MODEL,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: prompt,
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: `data:${mimeType};base64,${base64}`,
+              },
+            },
+          ],
+        },
+      ],
+      max_tokens: 800,
+    }),
   });
 
   if (!response.ok) {
@@ -145,16 +149,17 @@ async function verifyWithPoeDirectly(
   }
 
   const data = await response.json();
+  // Equivalent to: chat.choices[0].message.content
   const content: string = data?.choices?.[0]?.message?.content ?? '';
 
   if (!content) {
     throw new Error('Poe API 回應內容為空');
   }
 
-  return parseAIResponse(content);
+  return parseAIContent(content);
 }
 
-// ── Server mode: call tRPC backend ────────────────────────
+// ── Server mode: call tRPC backend (Manus hosted) ─────────
 
 async function verifyWithBackend(
   imageDataUrl: string,
@@ -199,7 +204,9 @@ export async function verifyWithAI(
   prompt: string
 ): Promise<AIVerifyResult> {
   if (IS_STATIC_MODE) {
+    // GitHub Pages: call Poe API directly from browser (CORS supported)
     return verifyWithPoeDirectly(imageDataUrl, prompt);
   }
+  // Manus hosted: call via tRPC backend
   return verifyWithBackend(imageDataUrl, prompt);
 }
